@@ -1,4 +1,7 @@
 #!/bin/sh
 
 cd "$SJ_DIR"
-tail -f -n +0 `find . -name out`
+tail -f -n5 `find . -name out` | while IFS= read -r line
+do
+	printf '%s\a\n' "$line"
+done
