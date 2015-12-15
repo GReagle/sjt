@@ -1,8 +1,5 @@
 #!/bin/sh
 export TLSC_NO_VERIFICATION=1
-export SJ_DIR="$HOME"/sj
-export SJ_SERVER=jabber.org
-export SJ_USER=taiga
 
 find "$SJ_DIR" -name status -exec rm -v '{}' ';'
 set-title.sh `basename "$0"`
