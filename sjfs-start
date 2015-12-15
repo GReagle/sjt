@@ -4,7 +4,7 @@ export SJ_DIR="$HOME"/sj
 export SJ_SERVER=jabber.org
 export SJ_USER=taiga
 
-find "$SJ_DIR" -name status -exec rm -vi '{}' ';'
+find "$SJ_DIR" -name status -exec rm -v '{}' ';'
 set-title.sh `basename "$0"`
 tcpclient "$SJ_SERVER" 5223 tlsc ucspi-tee sj
 #tcpclient "$SJ_SERVER" 5223 tlsc sj
