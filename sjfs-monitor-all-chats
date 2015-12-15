@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cd "$SJ_DIR"
+tail -f -n +0 `find . -name out`

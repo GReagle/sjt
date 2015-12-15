@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# run from watch
+cd "$SJ_DIR"
+if pgrep presenced > /dev/null; then
+	if test -n "$(find . -name status)"; then
+		egrep '.+' $(find . -name status) | sed 's|^\./||g' | sed 's|:|:  |g'
+	else
+		echo `basename "$0"`: No status files found
+	fi
+else
+	echo `basename "$0"`:  Presence daemon not running
+fi

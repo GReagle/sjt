@@ -1,0 +1,19 @@
+#!/bin/sh
+export TLSC_NO_VERIFICATION=1
+export SJ_DIR="$HOME"/sj
+export SJ_SERVER=jabber.org
+export SJ_USER=taiga
+
+find "$SJ_DIR" -name status -exec rm -vi '{}' ';'
+set-title.sh `basename "$0"`
+tcpclient "$SJ_SERVER" 5223 tlsc ucspi-tee sj
+#tcpclient "$SJ_SERVER" 5223 tlsc sj
+#sleep 3; presence
+#cd "$SJ_DIR"
+#while dialog --dselect "" 0 0 2> msj-result
+#do
+#	result="`cat msj-result`"
+#	cd "$result"
+#	st -t "msj: $result" -T "msj: $result" -e sjcw &
+#	cd "$SJ_DIR"
+#done
