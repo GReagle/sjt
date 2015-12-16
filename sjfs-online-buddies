@@ -1,13 +1,29 @@
 #!/bin/sh
-
 # run from watch
-cd "$SJ_DIR"
-if pgrep presenced > /dev/null; then
-	if test -n "$(find . -name status)"; then
-		egrep '.+' $(find . -name status) | sed 's|^\./||g' | sed 's|:|:  |g'
-	else
-		echo `basename "$0"`: No status files found
-	fi
+
+mm="`basename "$0"`"
+
+test a"$SJ_DIR"b != ab || { echo "$mm": SJ_DIR is not defined; exit 1; }
+cd "$SJ_DIR" || { echo "$mm:" cannot cd to "$SJ_DIR"; exit 1; }
+pgrep presenced >/dev/null || { echo "$mm:" no presenced; exit 1; }
+
+status="$(find . -name status)"
+if test -n "$status"; then
+	echo Online Buddies
+	echo --------------
+	egrep '.+' $status | sed 's|^\./||g' | sed 's|/status:|:\t|g'
 else
-	echo `basename "$0"`:  Presence daemon not running
+	echo "$mm:" No status files found
+	exit 1
 fi
+
+echo ; echo
+echo Offline Buddies
+echo ---------------
+for f in *; do
+	if test -d "$f"; then
+		if test ! -s "$f"/status; then
+			echo "$f"
+		fi
+	fi
+done

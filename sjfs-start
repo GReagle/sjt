@@ -1,16 +1,9 @@
 #!/bin/sh
 export TLSC_NO_VERIFICATION=1
 
-find "$SJ_DIR" -name status -exec rm -v '{}' ';'
-set-title.sh `basename "$0"`
+test a"$SJ_DIR"b != ab || { echo SJ_DIR is not defined; exit 1; }
+cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
+
+find "$SJ_DIR" -name status -exec rm -iv '{}' ';'
 tcpclient "$SJ_SERVER" 5223 tlsc ucspi-tee sj
 #tcpclient "$SJ_SERVER" 5223 tlsc sj
-#sleep 3; presence
-#cd "$SJ_DIR"
-#while dialog --dselect "" 0 0 2> msj-result
-#do
-#	result="`cat msj-result`"
-#	cd "$result"
-#	st -t "msj: $result" -T "msj: $result" -e sjcw &
-#	cd "$SJ_DIR"
-#done
