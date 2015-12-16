@@ -3,20 +3,23 @@
 cd "$SJ_DIR"
 
 outfiles=`find . -name out`
-tail -f -n5 $outfiles | while IFS= read -r line; do
-	printf '%s\a\n' "$line"
-done &
+tail -f -n5 $outfiles &
 tailpid=$!
+trap "kill $tailpid; exit" HUP INT ABRT TERM
 while true; do
 	new_outfiles=`find . -name out`
 	if [ "$outfiles" != "$new_outfiles" ] ; then
 		outfiles="$new_outfiles"
 		kill $tailpid
-		tail -f -n5 $outfiles | while IFS= read -r line; do
-			 printf '%s\a\n' "$line"
-		done &
+		printf '\a\n'
+		tail -f -n5 $outfiles &
 		tailpid=$!
+		trap "kill $tailpid; exit" HUP INT ABRT TERM
 	fi
 	sleep 5
 done
 kill $tailpid
+
+#tail -f -n5 $outfiles | while IFS= read -r line; do
+#	printf '%s\a\n' "$line"
+#done &
