@@ -4,7 +4,7 @@ cd "$SJ_DIR"
 
 outfiles=`find . -name out`
 tail -f -n5 $outfiles | while IFS= read -r line; do
-	printf '%s\n' "$line"
+	printf '%s\a\n' "$line"
 done &
 tailpid=$!
 while true; do
