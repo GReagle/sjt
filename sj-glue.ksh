@@ -6,11 +6,13 @@
 [ "$SJ_DIR" = "" ] && { echo SJ_DIR is not defined; exit 1; }
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
 
-#$te -T sjfs-start -e sjfs-start &
-#echo After you connect, hit enter
-#read line
-#presence
-#$te -T sjfs-online-buddies -e watch sjfs-online-buddies &
+$te -T sjfs-start -e sjfs-start &
+echo After you connect, hit enter
+read line
+presence
+$te -T sjfs-online-buddies -e watch sjfs-online-buddies &
+
+exit 0
 
 outfiles1=`find . -name out | sort`
 while true; do

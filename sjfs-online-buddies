@@ -15,7 +15,7 @@ else
 	exit 1
 fi
 
-echo ; echo
+echo
 echo Offline Buddies
 echo ---------------
 for f in *; do

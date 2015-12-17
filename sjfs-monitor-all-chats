@@ -1,25 +1,68 @@
 #!/bin/sh
 
+# either "no" to disable or a number of milliseconds for the notify-send timeout
+: "${notify:=2000}"
+
 [ "$SJ_DIR" = "" ] && { echo SJ_DIR is not defined; exit 1; }
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
 
+trap "kill 0; exit" HUP INT QUIT  # because of the background jobs
+
 outfiles=`find . -name out`
-tail -f -n5 $outfiles &
-tailpid=$!
-trap "kill $tailpid; exit" HUP INT ABRT TERM
+if [ "$outfiles" = "" ] ; then
+	tailpid=no
+else
+	tailpid=""
+	for o in $outfiles; do
+		tail -f -n0 $o | while IFS= read -r line; do
+			printf '%s\n' "$line"
+			if echo "$line" | egrep -q "^[[:digit:]]{4}-[[:digit:]]{2}-[[:digit:]]{2} [[:digit:]]{2}:[[:digit:]]{2} <${SJ_USER}@${SJ_SERVER}"; then
+				:  # this is a message that I sent myself, so don't notify
+			else
+				printf '\a'
+				dir=$(basename $(dirname "$o"))
+				message="$(echo "$line" | cut -d\> -f2-)"
+				[ "$notify" = no ] || notify-send -t "$notify" "$dir" "$message"
+			fi
+		done &
+		tailpid=$!" $tailpid"
+	done
+fi
 while true; do
 	new_outfiles=`find . -name out`
 	if [ "$outfiles" != "$new_outfiles" ] ; then
+		printf '\a'
+		if [ "$notify" != no ]; then
+			notify-send -t "$notify" "monitor all chats" "new or deleted out"
+		fi
 		outfiles="$new_outfiles"
-		kill $tailpid
-		printf '\a\n'
-		tail -f -n5 $outfiles &
-		tailpid=$!
-		trap "kill $tailpid; exit" HUP INT ABRT TERM
+		if [ "$tailpid" != "no" ]; then
+			for tp in $tailpid; do
+				kill $tp
+			done
+		fi
+		if [ "$outfiles" = "" ]; then
+			tailpid=no
+		else
+			tailpid=""
+			for o in $outfiles; do
+				tail -f -n0 $o | while IFS= read -r line; do
+					printf '%s\n' "$line"
+					if echo "$line" | egrep -q "^[[:digit:]]{4}-[[:digit:]]{2}-[[:digit:]]{2} [[:digit:]]{2}:[[:digit:]]{2} <${SJ_USER}@${SJ_SERVER}"; then
+						:  # this is a message that I sent myself, so don't notify
+					else
+						printf '\a'
+						dir=$(basename $(dirname "$o"))
+						[ "$notify" = no ] || notify-send -t "$notify" "$dir" "$line"
+					fi
+				done &
+				tailpid=$!" $tailpid"
+			done
+		fi
 	fi
 	sleep 5
 done
-kill $tailpid
+kill 0
 
 #tail -f -n5 $outfiles | while IFS= read -r line; do
 #	printf '%s\a\n' "$line"
