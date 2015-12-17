@@ -3,7 +3,7 @@
 
 : "${te:=st}"  # terminal emulator e.g. xterm, st, rxvt
 
-test a"$SJ_DIR"b != ab || { echo SJ_DIR is not defined; exit 1; }
+[ "$SJ_DIR" = "" ] && { echo SJ_DIR is not defined; exit 1; }
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
 
 #$te -T sjfs-start -e sjfs-start &
@@ -17,7 +17,7 @@ while true; do
 	outfiles2=`find . -name out | sort`
 	if [ "$outfiles1" != "$outfiles2" ] ; then
 		new_outfiles=`comm -13 <(echo "$outfiles1") <(echo "$outfiles2")`
-		if test a"$new_outfiles"b != ab; then
+		if test "$new_outfiles" != ""; then
 			for d in $new_outfiles; do
 				if cd `dirname $d`; then
 					printf '%s\a\n' "new chat from $(basename $(dirname $d))"

@@ -1,7 +1,7 @@
 #!/bin/sh
 export TLSC_NO_VERIFICATION=1
 
-test a"$SJ_DIR"b != ab || { echo SJ_DIR is not defined; exit 1; }
+[ "$SJ_DIR" = "" ] && { echo SJ_DIR is not defined; exit 1; }
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
 
 find "$SJ_DIR" -name status -exec rm -iv '{}' ';'

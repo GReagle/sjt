@@ -1,11 +1,9 @@
 #!/bin/sh
 # run from watch
 
-mm="`basename "$0"`"
-
-test a"$SJ_DIR"b != ab || { echo "$mm": SJ_DIR is not defined; exit 1; }
-cd "$SJ_DIR" || { echo "$mm:" cannot cd to "$SJ_DIR"; exit 1; }
-pgrep presenced >/dev/null || { echo "$mm:" no presenced; exit 1; }
+[ "$SJ_DIR" = "" ] && { echo SJ_DIR is not defined; exit 1; }
+cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
+pgrep presenced >/dev/null || { echo no presenced; exit 1; }
 
 status="$(find . -name status)"
 if test -n "$status"; then
@@ -13,7 +11,7 @@ if test -n "$status"; then
 	echo --------------
 	egrep '.+' $status | sed 's|^\./||g' | sed 's|/status:|:\t|g'
 else
-	echo "$mm:" No status files found
+	echo No status files found
 	exit 1
 fi
 
