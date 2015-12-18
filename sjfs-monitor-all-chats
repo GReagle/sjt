@@ -1,17 +1,16 @@
 #!/bin/sh
+[ "$DEBUG" ] && set -x
 
-# either "no" to disable or a number of milliseconds for the notify-send timeout
-: "${notify:=2000}"
+# number of milliseconds for the notify-send timeout
+: "${notify:=3000}"
 
-[ "$SJ_DIR" = "" ] && { echo SJ_DIR is not defined; exit 1; }
+[ "$SJ_DIR" ] || { echo SJ_DIR is not defined; exit 1; }
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
 
 trap "kill 0; exit" HUP INT QUIT  # because of the background jobs
 
 outfiles=`find . -name out`
-if [ "$outfiles" = "" ] ; then
-	tailpid=no
-else
+if [ "$outfiles" ]; then
 	tailpid=""
 	for o in $outfiles; do
 		tail -f -n0 $o | while IFS= read -r line; do
@@ -22,28 +21,27 @@ else
 				printf '\a'
 				dir=$(basename $(dirname "$o"))
 				message="$(echo "$line" | cut -d\> -f2-)"
-				[ "$notify" = no ] || notify-send -t "$notify" "$dir" "$message"
+				[ "$notify" ] && notify-send -t "$notify" "sjfs-monitor: $dir" "$message"			
 			fi
 		done &
 		tailpid=$!" $tailpid"
 	done
+else
+	tailpid=no
 fi
+
 while true; do
 	new_outfiles=`find . -name out`
 	if [ "$outfiles" != "$new_outfiles" ] ; then
 		printf '\a'
-		if [ "$notify" != no ]; then
-			notify-send -t "$notify" "monitor all chats" "new or deleted out"
-		fi
+		[ "$notify" ] && notify-send -t "$notify" "sjfs-monitor: $dir" "$message"
 		outfiles="$new_outfiles"
 		if [ "$tailpid" != "no" ]; then
 			for tp in $tailpid; do
 				kill $tp
 			done
 		fi
-		if [ "$outfiles" = "" ]; then
-			tailpid=no
-		else
+		if [ "$outfiles" ]; then
 			tailpid=""
 			for o in $outfiles; do
 				tail -f -n0 $o | while IFS= read -r line; do
@@ -53,11 +51,13 @@ while true; do
 					else
 						printf '\a'
 						dir=$(basename $(dirname "$o"))
-						[ "$notify" = no ] || notify-send -t "$notify" "$dir" "$line"
+						[ "$notify" ] && notify-send -t "$notify" "sjfs-monitor: $dir" "$line"
 					fi
 				done &
 				tailpid=$!" $tailpid"
 			done
+		else
+			tailpid=no
 		fi
 	fi
 	sleep 5

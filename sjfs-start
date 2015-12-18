@@ -1,9 +1,42 @@
 #!/bin/sh
-export TLSC_NO_VERIFICATION=1
+[ "$DEBUG" ] && set -x
 
-[ "$SJ_DIR" = "" ] && { echo SJ_DIR is not defined; exit 1; }
+usage="usage: $(basename $0) [-u <user>] [-s <server>] [-r <resource>] [-d <directory>]
+The directory and server must be provided, either via the command line or via
+the environment variables SJ_DIR and SJ_SERVER, which are also used by sj".
+
+state=""
+for arg; do
+	if [ "$state" ]; then
+		case "$state" in
+			-u) SJ_USER="$arg";;
+			-s) SJ_SERVER="$arg";;
+			-r) SJ_RESOURCE="$arg";;
+			-d) SJ_DIR="$arg";;
+			*) echo "$usage"; exit 1;;
+		esac
+		state=""
+	else
+		case "$arg" in
+			-d | -s | -u | -r) state="$arg";;
+			*) echo "$usage"; exit 1;;
+		esac
+	fi
+done
+
+[ "$SJ_DIR" ] || { echo SJ_DIR is not defined; exit 1; }
+[ "$SJ_SERVER" ] || { echo SJ_SERVER is not defined; exit 1; }
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
-
 find "$SJ_DIR" -name status -exec rm -i '{}' ';'
-tcpclient "$SJ_SERVER" 5223 tlsc ucspi-tee sj
-#tcpclient "$SJ_SERVER" 5223 tlsc sj
+export TLSC_NO_VERIFICATION=1
+export SJ_DIR
+export SJ_RESOURCE
+export SJ_SERVER
+export SJ_USER
+if [ -n "$DEBUG" ]; then
+	env | fgrep 'SJ_'
+	tee=ucspi-tee
+fi
+tcpclient "$SJ_SERVER" 5223 tlsc $tee sj
+
+exit

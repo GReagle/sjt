@@ -1,12 +1,24 @@
 #!/bin/sh
-# run from watch
+[ "$DEBUG" ] && set -x
 
-[ "$SJ_DIR" = "" ] && { echo SJ_DIR is not defined; exit 1; }
+usage="usage: $(basename $0) [-d <directory>]
+The directory must be provided, either via the command line or the environment
+variable SJ_DIR.  Run this command with watch."
+
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-d) SJ_DIR="$2"; shift;;
+		*)  echo "$usage"; exit 1;;
+	esac
+	shift
+done
+
+[ "$SJ_DIR" ] || { echo SJ_DIR is not defined; exit 1; }
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
 pgrep presenced >/dev/null || { echo no presenced; exit 1; }
 
 status="$(find . -name status)"
-if test -n "$status"; then
+if [ "$status" ]; then
 	echo Online Buddies
 	echo --------------
 	egrep '.+' $status | sed 's|^\./||g' | sed 's|/status:|:\t|g'
@@ -19,8 +31,8 @@ echo
 echo Offline Buddies
 echo ---------------
 for f in *; do
-	if test -d "$f"; then
-		if test ! -s "$f"/status; then
+	if [ -d "$f" ]; then
+		if [ ! -s "$f"/status ]; then
 			echo "$f"
 		fi
 	fi
