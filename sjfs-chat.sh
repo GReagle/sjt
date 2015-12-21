@@ -13,7 +13,7 @@
 # number of milliseconds for the notify-send timeout
 : "${notify:=3000}"
 
-trap "kill 0; exit" HUP INT QUIT
+trap "kill 0; exit" HUP INT QUIT EXIT
 
 cat out || { echo out file required; exit 1; }
 tail -f -n0 out | while IFS= read -r line

@@ -36,5 +36,12 @@ if [ -n "$DEBUG" ]; then
 	env | fgrep 'TLSC'
 fi
 tcpclient "$my_sj_server" 5223 tlsc sj -- "$@"
+#tcpclient "$my_sj_server" 5222 sj "$@"
 
 exit
+
+echo '#!/bin/sh' > sj-sv/run
+echo 'trap "kill 0; exit" EXIT' >> sj-sv/run
+echo tcpclient "$my_sj_server" 5223 tlsc sj -- "$@" >> sj-sv/run
+chmod u+x sj-sv/run
+runsv sj-sv
