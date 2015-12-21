@@ -5,38 +5,36 @@ usage="usage: $(basename $0) [-u <user>] [-s <server>] [-r <resource>] [-d <dire
 The directory and server must be provided, either via the command line or via
 the environment variables SJ_DIR and SJ_SERVER, which are also used by sj".
 
+my_sj_dir="$SJ_DIR"
+my_sj_server="$SJ_SERVER"
+
 state=""
 for arg; do
 	if [ "$state" ]; then
 		case "$state" in
-			-u) SJ_USER="$arg";;
-			-s) SJ_SERVER="$arg";;
-			-r) SJ_RESOURCE="$arg";;
-			-d) SJ_DIR="$arg";;
+			-s) my_sj_server="$arg";;
+			-d) my_sj_dir="$arg";;
+			-u | -r) ;;
 			*) echo "$usage"; exit 1;;
 		esac
 		state=""
 	else
 		case "$arg" in
-			-d | -s | -u | -r) state="$arg";;
+			-u | -s | -r | -d ) state="$arg";;
 			*) echo "$usage"; exit 1;;
 		esac
 	fi
 done
 
-[ "$SJ_DIR" ] || { echo SJ_DIR is not defined; exit 1; }
-[ "$SJ_SERVER" ] || { echo SJ_SERVER is not defined; exit 1; }
-cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
-find "$SJ_DIR" -name status -exec rm -i '{}' ';'
+[ "$my_sj_dir" ] || { echo Directory is needed via -d or SJ_DIR; exit 1; }
+[ "$my_sj_server" ] || { echo Server is needed via -s or SJ_SERVER; exit 1; }
+cd "$my_sj_dir" || { echo cannot cd to "$my_sj_dir"; exit 1; }
+find "$my_sj_dir" -name status -exec rm -i '{}' ';'
 export TLSC_NO_VERIFICATION=1
-export SJ_DIR
-export SJ_RESOURCE
-export SJ_SERVER
-export SJ_USER
 if [ -n "$DEBUG" ]; then
 	env | fgrep 'SJ_'
-	tee=ucspi-tee
+	env | fgrep 'TLSC'
 fi
-tcpclient "$SJ_SERVER" 5223 tlsc $tee sj
+tcpclient "$my_sj_server" 5223 tlsc sj -- "$@"
 
 exit
