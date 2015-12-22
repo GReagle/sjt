@@ -1,9 +1,10 @@
 #!/bin/sh
 [ "$DEBUG" ] && set -x
 
-usage="usage: $(basename $0) [-u <user>] [-s <server>] [-r <resource>] [-d <directory>]
+usage="usage: $(basename $0) [<sj options>]
+$(basename $0) passes all options to sj, which see.
 The directory and server must be provided, either via the command line or via
-the environment variables SJ_DIR and SJ_SERVER, which are also used by sj".
+the environment variables SJ_DIR and SJ_SERVER"
 
 my_sj_dir="$SJ_DIR"
 my_sj_server="$SJ_SERVER"
@@ -14,14 +15,11 @@ for arg; do
 		case "$state" in
 			-s) my_sj_server="$arg";;
 			-d) my_sj_dir="$arg";;
-			-u | -r) ;;
-			*) echo "$usage"; exit 1;;
 		esac
 		state=""
 	else
 		case "$arg" in
-			-u | -s | -r | -d ) state="$arg";;
-			*) echo "$usage"; exit 1;;
+			-s | -d ) state="$arg";;
 		esac
 	fi
 done
@@ -31,7 +29,7 @@ done
 cd "$my_sj_dir" || { echo cannot cd to "$my_sj_dir"; exit 1; }
 find "$my_sj_dir" -name status -exec rm -i '{}' ';'
 export TLSC_NO_VERIFICATION=1
-if [ -n "$DEBUG" ]; then
+if [ "$DEBUG" ]; then
 	env | fgrep 'SJ_'
 	env | fgrep 'TLSC'
 fi

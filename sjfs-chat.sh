@@ -6,7 +6,7 @@
 # or the empy string, then the feature is disabled.
 #
 # style of incming message:  a style for tput e.g. bold, dim, blink, smul
-# (underlined), rev (reverse), smso (standout) : "${style:=''}"
+# (underlined), rev (reverse), smso (standout)
 #: "${style:=smul}"
 # color of incoming message:  a color for tput setaf, e.g. 1-7
 : "${color:=1}"
