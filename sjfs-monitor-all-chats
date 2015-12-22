@@ -6,11 +6,12 @@
 # number of milliseconds for the notify-send timeout
 : "${notify_duration:=2000}"
 
-usage="usage: $(basename $0) [-d <directory>]"
+usage="usage: $(basename $0) [-d <directory>] [-e <command>]"
 
 while [ "$1" ]; do
 	case "$1" in
 		-d) SJ_DIR="$2"; shift;;
+		-e) execute="$2"; shift;;
 		*)  printf "$(basename $0): invalid option $1\n$usage\n"; exit 1;;
 	esac
 	shift
@@ -34,6 +35,7 @@ if [ "$outfiles" ]; then
 				dir=$(basename $(dirname "$o"))
 				message="$(echo "$line" | cut -d\> -f2-)"
 				[ "$notify_duration" != no ] && notify-send -t "$notify_duration" "sjfs-monitor: $dir" "$message"			
+				[ "$execute" ] && st -e sjfs-chat.sh -d $(dirname "$o") &
 			fi
 		done &
 		tailpid=$!" $tailpid"
