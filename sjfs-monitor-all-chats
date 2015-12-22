@@ -1,17 +1,16 @@
-#!/bin/sh
+#!/bin/ksh93
 [ "$DEBUG" ] && set -x
 
 # Set configuration variable to "no" to disable feature
 #
 # number of milliseconds for the notify-send timeout
-: "${notify_duration:=2000}"
+: "${note_time:=1000}"
 
-usage="usage: $(basename $0) [-d <directory>] [-e <command>]"
+usage="usage: $(basename $0) [-d <directory>]"
 
 while [ "$1" ]; do
 	case "$1" in
 		-d) SJ_DIR="$2"; shift;;
-		-e) execute="$2"; shift;;
 		*)  printf "$(basename $0): invalid option $1\n$usage\n"; exit 1;;
 	esac
 	shift
@@ -22,10 +21,9 @@ cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
 
 trap "kill 0; exit" HUP INT QUIT  # because of the background jobs
 
-outfiles=`find . -name out`
-if [ "$outfiles" ]; then
-	tailpid=""
-	for o in $outfiles; do
+outs1=`find . -name out | sort`
+if [ "$outs1" ]; then
+	for o in $outs1; do
 		tail -f -n0 $o | while IFS= read -r line; do
 			printf '%s\n' "$line"
 			if echo "$line" | egrep -q "^[[:digit:]]{4}-[[:digit:]]{2}-[[:digit:]]{2} [[:digit:]]{2}:[[:digit:]]{2} <${SJ_USER}@${SJ_SERVER}"; then
@@ -34,50 +32,35 @@ if [ "$outfiles" ]; then
 				printf '\a'
 				dir=$(basename $(dirname "$o"))
 				message="$(echo "$line" | cut -d\> -f2-)"
-				[ "$notify_duration" != no ] && notify-send -t "$notify_duration" "sjfs-monitor: $dir" "$message"			
-				[ "$execute" ] && st -e sjfs-chat.sh -d $(dirname "$o") &
+				[ "$note_time" != no ] && notify-send -t "$note_time" "sjfs-monitor: $dir" "$message"
 			fi
 		done &
-		tailpid=$!" $tailpid"
 	done
-else
-	tailpid=no
 fi
 
 while true; do
-	new_outfiles=`find . -name out`
-	if [ "$outfiles" != "$new_outfiles" ] ; then
-		printf '\a'
-		[ "$notify_duration" != no ] && notify-send -t "$notify_duration" "sjfs-monitor: $dir" "$message"
-		outfiles="$new_outfiles"
-		if [ "$tailpid" != "no" ]; then
-			for tp in $tailpid; do
-				kill $tp
-			done
-		fi
-		if [ "$outfiles" ]; then
-			tailpid=""
-			for o in $outfiles; do
-				tail -f -n0 $o | while IFS= read -r line; do
+	outs2=`find . -name out | sort`
+	if [ "$outs1" != "$outs2" ] ; then
+		new_outs=`comm -13 <(echo "$outs1") <(echo "$outs2")`
+		if [ "$new_outs" ]; then
+			for o in $new_outs; do
+				printf '%s\a\n' "new chat from $(basename $(dirname $o))"
+				[ "$note_time" != no ] && notify-send -t "$note_time" "sjfs-monitor" "new chat from $(basename $(dirname $o))"
+				tail -f -n+0 $o | while IFS= read -r line; do
 					printf '%s\n' "$line"
 					if echo "$line" | egrep -q "^[[:digit:]]{4}-[[:digit:]]{2}-[[:digit:]]{2} [[:digit:]]{2}:[[:digit:]]{2} <${SJ_USER}@${SJ_SERVER}"; then
 						:  # this is a message that I sent myself, so don't notify
 					else
 						printf '\a'
 						dir=$(basename $(dirname "$o"))
-						[ "$notify_duration" != no ] && notify-send -t "$notify_duration" "sjfs-monitor: $dir" "$line"
+						message="$(echo "$line" | cut -d\> -f2-)"
+						[ "$note_time" != no ] && notify-send -t "$note_time" "sjfs-monitor: $dir" "$message"			
 					fi
 				done &
-				tailpid=$!" $tailpid"
 			done
-		else
-			tailpid=no
 		fi
+		outs1="$outs2"
 	fi
 	sleep 5
 done
 kill 0
-
-#tail -f -n5 $outfiles | while IFS= read -r line; do
-#	printf '%s\a\n' "$line"
-#done &

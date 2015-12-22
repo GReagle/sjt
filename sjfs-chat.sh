@@ -10,21 +10,24 @@
 # color of incoming message:  a color for tput setaf, e.g. 1-7
 : "${color:=1}"
 # number of milliseconds for the notify-send timeout
-: "${notify_duration:=no}"
+: "${note_time:=no}"
 
 while [ "$1" ]; do
 	case "$1" in
-		-d) [ "$2" ] && cd "$2" || exit 1; shift;;
+		-d) [ "$2" ] && SJ_DIR="$2"; shift;;
+		-b) [ "$2" ] && buddy="$2"; shift;;
 		*)  printf "$(basename $0): invalid option $1\n"; exit 1;;
 	esac
 	shift
 done
 
-#trap "kill 0; exit" HUP INT QUIT EXIT
+[ "$SJ_DIR" ] || { echo SJ_DIR is not defined; exit 1; }
+[ "$buddy" ] || { echo buddy is not defined; exit 1; }
+cd "$SJ_DIR"/"$buddy" || { echo cannot cd to "$SJ_DIR"/"$buddy"; exit 1; }
 
 cat out || { echo out file required; exit 1; }
-tail -f -n0 out | while IFS= read -r line
-do
+#trap "kill 0; exit" HUP INT QUIT EXIT
+tail -f -n0 out | while IFS= read -r line; do
 	[ "$color" != no ] && tput setaf "$color"
 	[ "$style" != no ] && tput "$style"
 	printf '%s\n' "$line"
@@ -33,11 +36,11 @@ do
 		:  # this is a message that I sent myself, so don't notify
 	else
 		printf '\a'
-		[ "$notify_duration" != no ] && notify-send -t "$notify_duration" "sjfs-chat: $(basename $(pwd))" "$(echo "$line" | cut -d\> -f2-)"
+		[ "$note_time" != no ] && notify-send -t "$note_time" "sjfs-chat: $(basename $(pwd))" "$(echo "$line" | cut -d\> -f2-)"
 	fi
 done &
 
-##cat > in  # this works except that it inserts extra new lines
+## cat > in  # this works except that it inserts extra new lines
 while read -r line
 do
 	printf '%s' "$line" >> in
@@ -47,4 +50,4 @@ done
 for child in $(ps -o pid,ppid ax | awk "{ if ( \$2 == $$ ) { print \$1 }}"); do
 	ps $child >/dev/null && kill $child || true
 done
-#kill 0  # kill -- -$$  also works
+## kill 0  # kill -- -$$  also works
