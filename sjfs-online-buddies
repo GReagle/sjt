@@ -2,13 +2,12 @@
 [ "$DEBUG" ] && set -x
 
 usage="usage: $(basename $0) [-d <directory>]
-The directory must be provided, either via the command line or the environment
-variable SJ_DIR.  Run this command with watch."
+Run this command with watch for extra functionality."
 
-while [ $# -gt 0 ]; do
+while [ "$1" ]; do
 	case "$1" in
 		-d) SJ_DIR="$2"; shift;;
-		*)  echo "$usage"; exit 1;;
+		*)  printf "$(basename $0): invalid option $1\n$usage\n"; exit 1;;
 	esac
 	shift
 done

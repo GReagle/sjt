@@ -2,9 +2,7 @@
 [ "$DEBUG" ] && set -x
 
 usage="usage: $(basename $0) [<sj options>]
-$(basename $0) passes all options to sj, which see.
-The directory and server must be provided, either via the command line or via
-the environment variables SJ_DIR and SJ_SERVER"
+$(basename $0) passes all options to sj, which see."
 
 my_sj_dir="$SJ_DIR"
 my_sj_server="$SJ_SERVER"

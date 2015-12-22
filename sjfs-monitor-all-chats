@@ -1,8 +1,20 @@
 #!/bin/sh
 [ "$DEBUG" ] && set -x
 
+# Set configuration variable to "no" to disable feature
+#
 # number of milliseconds for the notify-send timeout
-: "${notify:=3000}"
+: "${notify_duration:=2000}"
+
+usage="usage: $(basename $0) [-d <directory>]"
+
+while [ "$1" ]; do
+	case "$1" in
+		-d) SJ_DIR="$2"; shift;;
+		*)  printf "$(basename $0): invalid option $1\n$usage\n"; exit 1;;
+	esac
+	shift
+done
 
 [ "$SJ_DIR" ] || { echo SJ_DIR is not defined; exit 1; }
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
@@ -21,7 +33,7 @@ if [ "$outfiles" ]; then
 				printf '\a'
 				dir=$(basename $(dirname "$o"))
 				message="$(echo "$line" | cut -d\> -f2-)"
-				[ "$notify" ] && notify-send -t "$notify" "sjfs-monitor: $dir" "$message"			
+				[ "$notify_duration" != no ] && notify-send -t "$notify_duration" "sjfs-monitor: $dir" "$message"			
 			fi
 		done &
 		tailpid=$!" $tailpid"
@@ -34,7 +46,7 @@ while true; do
 	new_outfiles=`find . -name out`
 	if [ "$outfiles" != "$new_outfiles" ] ; then
 		printf '\a'
-		[ "$notify" ] && notify-send -t "$notify" "sjfs-monitor: $dir" "$message"
+		[ "$notify_duration" != no ] && notify-send -t "$notify_duration" "sjfs-monitor: $dir" "$message"
 		outfiles="$new_outfiles"
 		if [ "$tailpid" != "no" ]; then
 			for tp in $tailpid; do
@@ -51,7 +63,7 @@ while true; do
 					else
 						printf '\a'
 						dir=$(basename $(dirname "$o"))
-						[ "$notify" ] && notify-send -t "$notify" "sjfs-monitor: $dir" "$line"
+						[ "$notify_duration" != no ] && notify-send -t "$notify_duration" "sjfs-monitor: $dir" "$line"
 					fi
 				done &
 				tailpid=$!" $tailpid"
