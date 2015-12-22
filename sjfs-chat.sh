@@ -10,9 +10,17 @@
 # color of incoming message:  a color for tput setaf, e.g. 1-7
 : "${color:=1}"
 # number of milliseconds for the notify-send timeout
-: "${notify_duration:=2000}"
+: "${notify_duration:=no}"
 
-trap "kill 0; exit" HUP INT QUIT EXIT
+while [ "$1" ]; do
+	case "$1" in
+		-d) [ "$2" ] && cd "$2" || exit 1; shift;;
+		*)  printf "$(basename $0): invalid option $1\n"; exit 1;;
+	esac
+	shift
+done
+
+#trap "kill 0; exit" HUP INT QUIT EXIT
 
 cat out || { echo out file required; exit 1; }
 tail -f -n0 out | while IFS= read -r line
@@ -32,8 +40,11 @@ done &
 ##cat > in  # this works except that it inserts extra new lines
 while read -r line
 do
-    printf '%s' "$line" >> in
+	printf '%s' "$line" >> in
 done
 
 # kill the background jobs
-kill 0  # kill -- -$$  also works
+for child in $(ps -o pid,ppid ax | awk "{ if ( \$2 == $$ ) { print \$1 }}"); do
+	ps $child >/dev/null && kill $child || true
+done
+#kill 0  # kill -- -$$  also works
