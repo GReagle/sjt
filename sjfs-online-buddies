@@ -16,7 +16,7 @@ done
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
 pgrep presenced >/dev/null || { echo no presenced; exit 1; }
 
-status="$(find . -name status)"
+status="$(find . -maxdepth 2 -name status)"
 if [ "$status" ]; then
 	echo Online Buddies
 	echo --------------
