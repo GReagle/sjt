@@ -16,17 +16,25 @@ while [ "$1" ]; do
 	case "$1" in
 		-d) [ "$2" ] && SJ_DIR="$2"; shift;;
 		-b) [ "$2" ] && buddy="$2"; shift;;
+		-c) current_dir=on ;;
 		*)  printf "$(basename $0): invalid option $1\n"; exit 1;;
 	esac
 	shift
 done
 
-[ "$SJ_DIR" ] || { echo SJ_DIR is not defined; exit 1; }
-[ "$buddy" ] || { echo buddy is not defined; exit 1; }
-cd "$SJ_DIR"/"$buddy" || { echo cannot cd to "$SJ_DIR"/"$buddy"; exit 1; }
+if [ "$current_dir" ]; then
+	: # no need to change directory
+else
+	[ "$SJ_DIR" ] || { echo SJ_DIR is not defined; exit 1; }
+	[ "$buddy" ] || { echo buddy is not defined; exit 1; }
+	cd "$SJ_DIR"/"$buddy" || { echo cannot cd to "$SJ_DIR"/"$buddy"; exit 1; }
+fi
 
 cat out || { echo out file required; exit 1; }
-#trap "kill 0; exit" HUP INT QUIT EXIT
+# kill the background jobs
+trap 'for child in $(ps -o pid,ppid ax | awk "{ if ( \$2 == $$ ) { print \$1 }}"); do
+	ps $child >/dev/null && kill $child || true
+done' HUP INT QUIT TERM EXIT
 tail -f -n0 out | while IFS= read -r line; do
 	[ "$color" != no ] && tput setaf "$color"
 	[ "$style" != no ] && tput "$style"
@@ -45,9 +53,3 @@ while read -r line
 do
 	printf '%s' "$line" >> in
 done
-
-# kill the background jobs
-for child in $(ps -o pid,ppid ax | awk "{ if ( \$2 == $$ ) { print \$1 }}"); do
-	ps $child >/dev/null && kill $child || true
-done
-## kill 0  # kill -- -$$  also works

@@ -25,7 +25,7 @@ done
 [ "$my_sj_dir" ] || { echo Directory is needed via -d or SJ_DIR; exit 1; }
 [ "$my_sj_server" ] || { echo Server is needed via -s or SJ_SERVER; exit 1; }
 cd "$my_sj_dir" || { echo cannot cd to "$my_sj_dir"; exit 1; }
-find "$my_sj_dir" -name status -exec rm -i '{}' ';'
+find "$my_sj_dir" -name status -exec rm '{}' ';'
 export TLSC_NO_VERIFICATION=1
 if [ "$DEBUG" ]; then
 	env | fgrep 'SJ_'
