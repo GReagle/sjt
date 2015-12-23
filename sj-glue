@@ -1,5 +1,4 @@
 #!/bin/sh
-# mksh does not have <() feature
 
 : "${te:=st}"  # terminal emulator, e.g. xterm, st, rxvt
 
@@ -44,7 +43,7 @@ while true; do
 			for d in $new_outfiles; do
 				if cd `dirname $d`; then
 					printf '%s\a\n' "new chat from $(basename $(dirname $d))"
-					$te -T $(basename $(dirname $d)) -e sjfs-chat.sh &
+					$te -T $(basename $(dirname $d)) -e sjfs-chat &
 					cd ..
 				fi
 			done
@@ -59,7 +58,7 @@ done
 #do
 #	result="`cat msj-result`"
 #	cd "$result"
-#	$te -T "chat: $result" -e sjfs-chat.sh &
+#	$te -T "chat: $result" -e sjfs-chat &
 #	cd "$SJ_DIR"
 #done
 
