@@ -4,14 +4,12 @@
 # Set configuration variable to "no" to disable feature
 #
 # number of milliseconds for the notify-send timeout
-: "${note_time:=1000}"
-
-usage="usage: $(basename $0) [-d <directory>]"
+: "${note_time:=4000}"
 
 while [ "$1" ]; do
 	case "$1" in
 		-d) SJ_DIR="$2"; shift;;
-		*)  printf "$(basename $0): invalid option $1\n$usage\n"; exit 1;;
+		*)  printf "$(basename $0): invalid option $1\n"; exit 1;;
 	esac
 	shift
 done
@@ -44,8 +42,9 @@ while true; do
 		new_outs=`comm -13 <(echo "$outs1") <(echo "$outs2")`
 		if [ "$new_outs" ]; then
 			for o in $new_outs; do
-				printf '%s\a\n' "new chat from $(basename $(dirname $o))"
-				[ "$note_time" != no ] && notify-send -t "$note_time" "sjfs-monitor" "new chat from $(basename $(dirname $o))"
+				notice="new chat from $(basename $(dirname $o))"
+				printf "$notice\a\n"
+				[ "$note_time" != no ] && notify-send -t "$note_time" "sjfs-monitor" "$notice"
 				tail -f -n+0 $o | while IFS= read -r line; do
 					printf '%s\n' "$line"
 					if echo "$line" | egrep -q "^[[:digit:]]{4}-[[:digit:]]{2}-[[:digit:]]{2} [[:digit:]]{2}:[[:digit:]]{2} <${SJ_USER}@${SJ_SERVER}"; then
