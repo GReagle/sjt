@@ -22,7 +22,7 @@ for arg; do
 	fi
 done
 
-[ "$SJ_DIR" = "" ] && { echo SJ_DIR is not defined; exit 1; }
+[ "$SJ_DIR" ] || { echo SJ_DIR is not defined; exit 1; }
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
 
 $te -T sjfs-start -e sjfs-start "$@" &
