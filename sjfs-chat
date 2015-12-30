@@ -1,5 +1,7 @@
 #!/bin/sh
 # Ctrl-D to end
+set -eu
+: "${DEBUG:=}"
 [ "$DEBUG" ] && set -x
 
 # Set configuration variable to "no" to disable feature
@@ -12,11 +14,19 @@
 # number of milliseconds for the notify-send timeout
 : "${note_time:=no}"
 
-while [ "$1" ]; do
+: "${SJ_DIR:=}"
+: "${SJ_SERVER:=}"
+: "${SJ_USER:=}"
+
+current_dir=""  # initialize variables
+buddy=""
+while [ $# -gt 0 ]; do
 	case "$1" in
 		-d) [ "$2" ] && SJ_DIR="$2"; shift;;
+		-s) [ "$2" ] && SJ_SERVER="$2"; shift;;
+		-u) [ "$2" ] && SJ_USER="$2"; shift;;
 		-b) [ "$2" ] && buddy="$2"; shift;;
-		-c) current_dir=on ;;
+		-c) current_dir=yes ;;
 		*)  printf "$(basename $0): invalid option $1\n"; exit 1;;
 	esac
 	shift

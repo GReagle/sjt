@@ -1,14 +1,19 @@
 #!/bin/ksh93
+set -eu
+: "${DEBUG:=}"
+[ "$DEBUG" ] && set -x
 
 : "${te:=st}"  # terminal emulator, e.g. xterm, st, rxvt
+
+: "${SJ_DIR:=}"
 
 state=""
 for arg; do
 	if [ "$state" ]; then
 		case "$state" in
 			-d) SJ_DIR="$arg";;
-			-u) SJ_USER="$rg";;
-			-r) SJ_RESOURCE="$rg";;
+			-u) SJ_USER="$arg";;
+			-r) SJ_RESOURCE="$arg";;
 			-s) SJ_SERVER="$arg";;
 			*)  echo invalid state;;
 		esac
@@ -65,6 +70,7 @@ while true; do
 		done
 		outs1="$outs2"
 	fi
+	sleep 5
 done
 
 exit 0

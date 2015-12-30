@@ -1,10 +1,14 @@
 #!/bin/sh
+set -eu
+: "${DEBUG:=}"
 [ "$DEBUG" ] && set -x
 
 usage="usage: $(basename $0) [-d <directory>]
 Run this command with watch for extra functionality."
 
-while [ "$1" ]; do
+: "${SJ_DIR:=}"
+
+while [ $# -gt 0 ]; do
 	case "$1" in
 		-d) SJ_DIR="$2"; shift;;
 		*)  printf "$(basename $0): invalid option $1\n$usage\n"; exit 1;;

@@ -1,4 +1,6 @@
 #!/bin/ksh93
+set -eu
+: "${DEBUG:=}"
 [ "$DEBUG" ] && set -x
 
 # Set configuration variable to "no" to disable feature
@@ -6,7 +8,9 @@
 # number of milliseconds for the notify-send timeout
 : "${note_time:=4000}"
 
-while [ "$1" ]; do
+: "${SJ_DIR:=}"
+
+while [ $# -gt 0 ]; do
 	case "$1" in
 		-d) SJ_DIR="$2"; shift;;
 		*)  printf "$(basename $0): invalid option $1\n"; exit 1;;

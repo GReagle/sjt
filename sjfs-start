@@ -1,8 +1,13 @@
 #!/bin/sh
+set -eu
+: "${DEBUG:=}"
 [ "$DEBUG" ] && set -x
 
 usage="usage: $(basename $0) [<sj options>]
 $(basename $0) passes all options to sj, which see."
+
+: "${SJ_DIR:=}"
+: "${SJ_SERVER:=}"
 
 my_sj_dir="$SJ_DIR"
 my_sj_server="$SJ_SERVER"
@@ -28,8 +33,8 @@ cd "$my_sj_dir" || { echo cannot cd to "$my_sj_dir"; exit 1; }
 find "$my_sj_dir" -name status -exec rm '{}' ';'
 export TLSC_NO_VERIFICATION=1
 if [ "$DEBUG" ]; then
-	env | fgrep 'SJ_'
-	env | fgrep 'TLSC'
+	env | fgrep 'SJ_' || true
+	env | fgrep 'TLSC' || true
 fi
 tcpclient "$my_sj_server" 5223 tlsc sj -- "$@"
 #tcpclient "$my_sj_server" 5222 sj "$@"
