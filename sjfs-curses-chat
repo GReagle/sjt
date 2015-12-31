@@ -1,0 +1,69 @@
+#!/usr/bin/env lua
+require('strict')
+local P = require('posix')
+local C = require('curses')
+
+tail_out = assert(io.popen('tail -f -n0 out', 'r'))
+assert(tail_out:setvbuf('no'))
+tail_out_fd = P.fileno(tail_out)
+
+stdin_fd = P.fileno(io.stdin)
+
+fds = {
+	[tail_out_fd] = { events = {IN=true} },
+	[stdin_fd] = { events = {IN=true} }
+}
+
+in_fifo = io.open('in', 'a')
+assert(in_fifo:setvbuf('no'))
+
+C.initscr()
+C.cbreak(true)
+C.echo(true)
+local stdscr = C.stdscr()
+stdscr:scrollok(true)
+stdscr:clear()
+stdscr:refresh()
+
+line = ''
+while true do
+	r = P.poll(fds, -1)
+	if r == 0 then  -- timeout
+		break
+	elseif r == 1 then
+		if  fds[tail_out_fd].revents.IN then
+			stdscr:addstr(tail_out:read('*l') .. '\n')
+			stdscr:refresh()
+			-- C.beep()
+		elseif  fds[stdin_fd].revents.IN then
+			c = stdscr:getch()
+			if c < 256 then
+				c = string.char(c)
+			else
+				stdscr:addstr('What kind of character is this?')
+			end
+			if c == '\n' then
+				if line == 'q' then
+					break
+				end
+				in_fifo:write(line)
+				line = ''
+			else
+				line = line .. c
+			end
+		else
+			print('What kind of event is this?')
+		end
+	else
+		print "finish!"
+		break
+	end
+end
+
+in_fifo:flush()
+in_fifo:close()
+--tail_out:flush()  -- makes the program freeze
+--tail_out:close()  -- makes the program freeze
+C.endwin()
+
+os.exit(true)
