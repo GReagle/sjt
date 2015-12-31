@@ -3,6 +3,10 @@ require('strict')
 local P = require('posix')
 local C = require('curses')
 
+local s_lines, s_cols  -- size of the total screen
+local top_win, bottom_win
+local input_lines = 3  -- size of the input window
+
 tail_out = assert(io.popen('tail -f -n0 out', 'r'))
 assert(tail_out:setvbuf('no'))
 tail_out_fd = P.fileno(tail_out)
@@ -21,9 +25,27 @@ C.initscr()
 C.cbreak(true)
 C.echo(true)
 local stdscr = C.stdscr()
+
 stdscr:scrollok(true)
+stdscr:keypad(true)
 stdscr:clear()
 stdscr:refresh()
+
+s_lines, s_cols = stdscr:getmaxyx()
+top_win = C.newwin(input_lines,  s_cols, 0,             0)
+bottom_win = C.newwin(s_lines-input_lines, s_cols, input_lines, 0)
+
+top_lines, top_cols = top_win:getmaxyx()
+--top_win:addstr('lines='..top_lines..'\n')
+--top_win:addstr('cols='..top_cols..'\n')
+--top_win:border()
+top_win:refresh()
+
+bottom_lines, bottom_cols = bottom_win:getmaxyx()
+--bottom_win:addstr('lines='..bottom_lines..'\n')
+--bottom_win:addstr('cols='..bottom_cols..'\n')
+--bottom_win:border()
+bottom_win:refresh()
 
 line = ''
 while true do
@@ -32,15 +54,17 @@ while true do
 		break
 	elseif r == 1 then
 		if  fds[tail_out_fd].revents.IN then
-			stdscr:addstr(tail_out:read('*l') .. '\n')
-			stdscr:refresh()
+			bottom_win:addstr(tail_out:read('*l') .. '\n')
+			bottom_win:refresh()
 			-- C.beep()
 		elseif  fds[stdin_fd].revents.IN then
 			c = stdscr:getch()
 			if c < 256 then
 				c = string.char(c)
 			else
-				stdscr:addstr('What kind of character is this?')
+				c = ''
+				--top_win:addstr('What kind of character is this?')
+				--top_win:refresh()
 			end
 			if c == '\n' then
 				if line == 'q' then
@@ -48,11 +72,13 @@ while true do
 				end
 				in_fifo:write(line)
 				line = ''
+				top_win:clear()
+				top_win:refresh()
 			else
 				line = line .. c
 			end
 		else
-			print('What kind of event is this?')
+			top_win:addstr('What kind of event is this?')
 		end
 	else
 		print "finish!"
