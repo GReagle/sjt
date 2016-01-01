@@ -6,7 +6,7 @@ set -eu
 # Set configuration variable to "no" to disable feature
 #
 # number of milliseconds for the notify-send timeout
-: "${note_time:=4000}"
+: "${note_time:=no}"
 
 : "${SJ_DIR:=}"
 

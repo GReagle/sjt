@@ -30,18 +30,20 @@ done
 [ "$SJ_DIR" ] || { echo SJ_DIR is not defined; exit 1; }
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
 
-$te -T sjfs-start -e sjfs-start "$@" &
-echo After you connect, hit enter
+jid="${SJ_USER}@${SJ_SERVER}"
+$te -T "${jid} - connect" -e sjfs-connect "$@" &
+echo After you enter your password in the connect window, hit enter here...
 read line
+echo Announcing presence
 presence -d "$SJ_DIR"
-$te -T sjfs-online-buddies -e watch sjfs-online-buddies -d "$SJ_DIR" &
-$te -T sjfs-monitor-all-chats -e sjfs-monitor-all-chats -d "$SJ_DIR" &
+$te -T "${jid} - buddies" -e watch sjfs-online-buddies -d "$SJ_DIR" &
+$te -T "${jid} - monitor-all" -e sjfs-monitor-all-chats -d "$SJ_DIR" &
 
 # prepare for runit
 echo "#!/bin/sh
-$te -e sjfs-chat -c" > run
+$te -T \$(basename \$PWD) -e sjfs-chat -c" > run
 chmod u+x run
-
+#exit
 trap 'kill 0; exit' HUP INT QUIT TERM EXIT
 
 outs1=`find . -name out | sort`

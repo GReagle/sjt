@@ -12,7 +12,7 @@ set -eu
 # color of incoming message:  a color for tput setaf, e.g. 1-7
 : "${color:=1}"
 # number of milliseconds for the notify-send timeout
-: "${note_time:=no}"
+: "${note_time:=500}"
 
 : "${SJ_DIR:=}"
 : "${SJ_SERVER:=}"
