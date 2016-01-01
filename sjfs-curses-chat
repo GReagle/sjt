@@ -1,87 +1,85 @@
 #!/usr/bin/env lua
 require('strict')
-local P = require('posix')
-local C = require('curses')
+local Px = require('posix')
+local Cs = require('curses')
 
-local s_lines, s_cols  -- size of the total screen
-local top_win, bottom_win
-local input_lines = 3  -- size of the input window
+local typing_lines = 2  -- size of the input window
 
-tail_out = assert(io.popen('tail -f -n0 out', 'r'))
+local tail_out = assert(io.popen('tail -f -n0 out', 'r'))
 assert(tail_out:setvbuf('no'))
-tail_out_fd = P.fileno(tail_out)
+local tail_out_fd = Px.fileno(tail_out)
 
-stdin_fd = P.fileno(io.stdin)
+local stdin_fd = Px.fileno(io.stdin)
 
-fds = {
+local fds = {
 	[tail_out_fd] = { events = {IN=true} },
 	[stdin_fd] = { events = {IN=true} }
 }
 
-in_fifo = io.open('in', 'a')
+local in_fifo = io.open('in', 'a')
 assert(in_fifo:setvbuf('no'))
 
-C.initscr()
-C.cbreak(true)
-C.echo(true)
-local stdscr = C.stdscr()
-
-stdscr:scrollok(true)
-stdscr:keypad(true)
+Cs.initscr()
+Cs.cbreak(true)
+Cs.echo(false)
+local stdscr = Cs.stdscr()
 stdscr:clear()
 stdscr:refresh()
 
-s_lines, s_cols = stdscr:getmaxyx()
-top_win = C.newwin(input_lines,  s_cols, 0,             0)
-bottom_win = C.newwin(s_lines-input_lines, s_cols, input_lines, 0)
+local s_lines, s_cols = stdscr:getmaxyx()
+local display_win = Cs.newwin(s_lines - typing_lines, s_cols, 0, 0)
+local typing_win = Cs.newwin(typing_lines, s_cols, s_lines - typing_lines, 0)
 
-top_lines, top_cols = top_win:getmaxyx()
---top_win:addstr('lines='..top_lines..'\n')
---top_win:addstr('cols='..top_cols..'\n')
---top_win:border()
-top_win:refresh()
+typing_win:keypad(true)
+typing_win:scrollok(true)
+typing_win:clear()
+typing_winn:refresh()
 
-bottom_lines, bottom_cols = bottom_win:getmaxyx()
---bottom_win:addstr('lines='..bottom_lines..'\n')
---bottom_win:addstr('cols='..bottom_cols..'\n')
---bottom_win:border()
-bottom_win:refresh()
+display_win:scrollok(true)
+display_win:clear()
+display_win:refresh()
 
-line = ''
+local line = ''
+local s = ''
 while true do
-	r = P.poll(fds, -1)
-	if r == 0 then  -- timeout
+	local poll_result = Px.poll(fds, -1)
+	if poll_result == 0 then  -- timeout
 		break
-	elseif r == 1 then
+	elseif poll_result == 1 then
 		if  fds[tail_out_fd].revents.IN then
-			bottom_win:addstr(tail_out:read('*l') .. '\n')
-			bottom_win:refresh()
-			-- C.beep()
+			display_win:addstr(tail_out:read('*l') .. '\n')
+			display_win:refresh()
+			-- Cs.beep()
 		elseif  fds[stdin_fd].revents.IN then
-			c = stdscr:getch()
+			local c = typing_win:getch()
 			if c < 256 then
-				c = string.char(c)
+				s = string.char(c)
+				typing_win:addstr(s)
+				typing_win:refresh()
 			else
-				c = ''
-				--top_win:addstr('What kind of character is this?')
-				--top_win:refresh()
+				s = ''
+				--typing_win:addstr('What kind of character is this?')
+				--typing_win:refresh()
 			end
-			if c == '\n' then
+			if s == '\n' then
 				if line == 'q' then
 					break
 				end
 				in_fifo:write(line)
 				line = ''
-				top_win:clear()
-				top_win:refresh()
+				typing_win:clear()
+				typing_win:addstr('Type q then Enter to quit\n')
+				typing_win:refresh()
 			else
-				line = line .. c
+				line = line .. s
 			end
 		else
-			top_win:addstr('What kind of event is this?')
+			typing_win:addstr('What kind of event is this?')
+			typing_win:refresh()
 		end
 	else
-		print "finish!"
+		display_win:addstr('Polling finished!')
+		display_win:refresh()
 		break
 	end
 end
@@ -90,6 +88,6 @@ in_fifo:flush()
 in_fifo:close()
 --tail_out:flush()  -- makes the program freeze
 --tail_out:close()  -- makes the program freeze
-C.endwin()
+Cs.endwin()
 
 os.exit(true)
