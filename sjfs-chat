@@ -4,6 +4,12 @@ set -eu
 : "${DEBUG:=}"
 [ "$DEBUG" ] && set -x
 
+usage="usage: $(basename $0) [-dsu] [-c | -b buddy]
+-c: chat in current directory, expecting in and out files to exist
+-b: chat with specified buddy
+See sj(1) for explanation of options d, s, and u.
+Environment variables:  all from sj(1) and style, color, note_time"
+
 # Set configuration variable to "no" to disable feature
 #
 # style of incming message:  a style for tput e.g. bold, dim, blink, smul
@@ -27,7 +33,7 @@ while [ $# -gt 0 ]; do
 		-u) [ "$2" ] && SJ_USER="$2"; shift;;
 		-b) [ "$2" ] && buddy="$2"; shift;;
 		-c) current_dir=yes ;;
-		*)  printf "$(basename $0): invalid option $1\n"; exit 1;;
+		*)  printf "$(basename $0): invalid option $1\n$usage\n"; exit 1;;
 	esac
 	shift
 done
@@ -35,8 +41,8 @@ done
 if [ "$current_dir" ]; then
 	: # no need to change directory
 else
-	[ "$SJ_DIR" ] || { echo SJ_DIR is not defined; exit 1; }
-	[ "$buddy" ] || { echo buddy is not defined; exit 1; }
+	[ "$SJ_DIR" ] || { echo Directory is needed via -d or SJ_DIR; exit 1; }
+	[ "$buddy" ] || { echo Buddy is needed via -b; exit 1; }
 	cd "$SJ_DIR"/"$buddy" || { echo cannot cd to "$SJ_DIR"/"$buddy"; exit 1; }
 fi
 

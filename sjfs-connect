@@ -4,7 +4,8 @@ set -eu
 [ "$DEBUG" ] && set -x
 
 usage="usage: $(basename $0) [<sj options>]
-$(basename $0) passes all options to sj, which see."
+$(basename $0) passes all options to sj, which see.
+Environment variables:  all from sj(1) and port"
 
 : "${SJ_DIR:=}"
 : "${SJ_SERVER:=}"

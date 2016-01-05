@@ -3,6 +3,9 @@ set -eu
 : "${DEBUG:=}"
 [ "$DEBUG" ] && set -x
 
+usage="usage: $(basename $0) [-d <directory>]
+Environment variables:  SJ_DIR"
+
 # Set configuration variable to "no" to disable feature
 #
 # number of milliseconds for the notify-send timeout
@@ -13,12 +16,12 @@ set -eu
 while [ $# -gt 0 ]; do
 	case "$1" in
 		-d) SJ_DIR="$2"; shift;;
-		*)  printf "$(basename $0): invalid option $1\n"; exit 1;;
+		*)  printf "$(basename $0): invalid option $1\n$usage\n"; exit 1;;
 	esac
 	shift
 done
 
-[ "$SJ_DIR" ] || { echo SJ_DIR is not defined; exit 1; }
+[ "$SJ_DIR" ] || { echo Directory is needed via -d or SJ_DIR; exit 1; }
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
 
 trap "kill 0; exit" HUP INT QUIT TERM EXIT  # kill all background jobs
