@@ -57,5 +57,7 @@ sj-many-windows uses [runit](http://smarden.org/runit/) to ensure that
 there is at most one window per chat.
 
 ## runtime configuration via environment variables
-Many of the commands use environment variables for runtime configuration.  See the beginning of the script for such variables.  For example:
-````env DEBUG=1 note_time=200 sjfs-monitor-all-chats````
+
+Many of the commands use environment variables for runtime configuration.
+See the beginning of the script for such variables.  For example: ````env
+DEBUG=1 note_time=200 sjfs-monitor-all-chats````
