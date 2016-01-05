@@ -14,6 +14,15 @@ to my $PATH, and that is the only step in installation.  If you want to,
 you can copy the programs to /usr/local/bin or whatever you fancy; I don't
 bother with that since I change the programs so much.
 
+## Runtime dependencies
+
+sj-many-windows requires [runit](http://smarden.org/runit/) to ensure that
+there is at most one window per chat.
+
+Some of the sjfs commands can use notify-send (on my system in package
+libnotify-bin), but it is optional.  Set the environment variable note_time
+to "no" to disable.
+
 ## sjfs - Simple Jabber From Shell
 
 The sjfs commands are a command line interface (CLI) for simple jabber.
@@ -21,16 +30,16 @@ Some of them happen to be written in shell script, but that is not what
 "from shell" means; it means that they are intended to be used *from your
 shell*.
 
-### sjfs - Overview of use
+### Using sjfs
 
 Start with sjfs-connect (which runs sj), and keep that running as long as
 you want to be connected.  It will ask for your pasword (because it runs
 sj).  Don't forget to set the SJ_ variables or use the drsu options; `man
-sj` for details.  sjfs-connect will not automtically run in the background,
-so if you need to get your shell prompt back while staying connected, run
-it in its own terminal emulator window or use a tool like dvtm or tmux or
-dtach or abduco.  When you want to close the connection, interrupt/kill
-sjfs-connect by hitting Control-C.
+sj` for details.  sjfs-connect will not automtically run in the background
+(i.e. it stays in the foreground), so if you need to get your shell prompt
+back while staying connected, run it in its own terminal emulator window or
+use a tool like dvtm, tmux, dtach, or abduco.  When you want to close
+the connection, interrupt/kill sjfs-connect by hitting Control-C.
 
 Once you are connected, you can run the rest of the sjfs commands at will.
 
@@ -50,11 +59,6 @@ Of course if you close the "connect" window you will lose your connection.
 sj-many-windows interoperates fines with sjfs commands in general; you can
 mix them together.  For example, if you have started sj-many-windows, you
 can still run sjfs-online-buddies or sjfs-chat whenever you want.
-
-### sj-many-windows - requirements
-
-sj-many-windows uses [runit](http://smarden.org/runit/) to ensure that
-there is at most one window per chat.
 
 ## runtime configuration via environment variables
 
