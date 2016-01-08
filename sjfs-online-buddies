@@ -22,8 +22,6 @@ pgrep presenced >/dev/null || { echo no presenced; exit 1; }
 
 status="$(find . -maxdepth 2 -name status)"
 if [ "$status" ]; then
-	echo Online Buddies
-	echo --------------
 	egrep '.+' $status | sed 's|^\./||g' | sed 's|/status:|:\t|g'
 else
 	echo No status files found
