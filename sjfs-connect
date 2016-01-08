@@ -4,10 +4,12 @@ set -eu
 [ "$DEBUG" ] && set -x
 
 usage="usage: $(basename $0) [<sj options>]
-$(basename $0) passes all options to sj, which see."
+$(basename $0) passes all options to sj, which see.
+Environment variables:  all from sj(1) and port"
 
 : "${SJ_DIR:=}"
 : "${SJ_SERVER:=}"
+: "${port:=5223}"
 
 my_sj_dir="$SJ_DIR"
 my_sj_server="$SJ_SERVER"
@@ -23,6 +25,7 @@ for arg; do
 	else
 		case "$arg" in
 			-s | -d ) state="$arg";;
+			-h ) echo "$usage"; exit;;
 		esac
 	fi
 done
@@ -36,7 +39,10 @@ if [ "$DEBUG" ]; then
 	env | fgrep 'SJ_' || true
 	env | fgrep 'TLSC' || true
 fi
-tcpclient "$my_sj_server" 5223 tlsc sj -- "$@"
-#tcpclient "$my_sj_server" 5222 sj "$@"
+if [ "$port" = 5223 ]; then
+	tcpclient "$my_sj_server" "$port" tlsc sj -- "$@"
+else
+	tcpclient "$my_sj_server" "$port" sj "$@"
+fi
 
 exit

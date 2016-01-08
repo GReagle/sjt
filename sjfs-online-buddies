@@ -4,7 +4,8 @@ set -eu
 [ "$DEBUG" ] && set -x
 
 usage="usage: $(basename $0) [-d <directory>]
-Run this command with watch for extra functionality."
+Run this command with watch for extra functionality.
+Environment variables:  SJ_DIR"
 
 : "${SJ_DIR:=}"
 
@@ -16,7 +17,7 @@ while [ $# -gt 0 ]; do
 	shift
 done
 
-[ "$SJ_DIR" ] || { echo SJ_DIR is not defined; exit 1; }
+[ "$SJ_DIR" ] || { echo Directory is needed via -d or SJ_DIR; exit 1; }
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
 pgrep presenced >/dev/null || { echo no presenced; exit 1; }
 
