@@ -34,15 +34,16 @@ done
 [ "$my_sj_server" ] || { echo Server is needed via -s or SJ_SERVER; exit 1; }
 cd "$my_sj_dir" || { echo cannot cd to "$my_sj_dir"; exit 1; }
 find "$my_sj_dir" -name status -exec rm '{}' ';'
+# to prevent error "tlsc: tls_error: ssl verify setup failure"
 export TLSC_NO_VERIFICATION=1
 if [ "$DEBUG" ]; then
 	env | fgrep 'SJ_' || true
 	env | fgrep 'TLSC' || true
 fi
-if [ "$port" = 5223 ]; then
-	tcpclient "$my_sj_server" "$port" tlsc sj -- "$@"
-else
-	tcpclient "$my_sj_server" "$port" sj "$@"
-fi
+[ "$port" = 5223 ] && tlsc=tlsc || tlsc=""
+env POSIXLY_CORRECT=yes tcpclient "$my_sj_server" "$port" $tlsc sj "$@"
+
+# POSIXLY_CORRECT is to prevent error "tlsc: invalid option", to make GNU getopt
+# behave well; see https://github.com/younix/ucspi/issues/5
 
 exit
