@@ -43,7 +43,7 @@ fi
 [ "$port" = 5223 ] && tlsc=tlsc || tlsc=""
 env POSIXLY_CORRECT=yes tcpclient "$my_sj_server" "$port" $tlsc sj "$@"
 
-# POSIXLY_CORRECT is to prevent error "tlsc: invalid option", to make GNU getopt
-# behave well; see https://github.com/younix/ucspi/issues/5
+# POSIXLY_CORRECT is to prevent error "tlsc: invalid option", to make GNU
+# getopt() behave well; see https://github.com/younix/ucspi/issues/5
 
 exit
