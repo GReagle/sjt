@@ -63,7 +63,7 @@ while true; do
 		for o in $new_outs; do
 			dir=$(dirname "$o")
 			touch "$dir"/down
-			[ -e "$dir"/run ] || echo ln -s ../run "$dir"
+			[ -e "$dir"/run ] || ln -s ../run "$dir"
 			runsv "$dir" &
 			tail -f -n0 "$o" | while IFS= read -r line; do
 				sv once "$dir"
