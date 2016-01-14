@@ -57,6 +57,11 @@ for o in $outs1; do
 done
 
 while true; do
+	#sleep 5
+	# The only purpose of entr here is to wait for a change in the current
+	# directory; the first true is because entr needs a utility; the second
+	# true is to prevent an error in the script since entr will return 2
+	echo . | entr -pd true || true
 	outs2=`find . -name out | sort`
 	if [ "$outs1" != "$outs2" ] ; then
 		new_outs=`comm -13 <(echo "$outs1") <(echo "$outs2")`  # <() requires ksh93
@@ -71,7 +76,6 @@ while true; do
 		done
 		outs1="$outs2"
 	fi
-	sleep 5
 done
 
 exit 0
