@@ -39,6 +39,8 @@ if [ "$outs1" ]; then
 fi
 
 while true; do
+	#sleep 5
+	echo . | entr -pd true || true
 	outs2=`find . -name out | sort`
 	if [ "$outs1" != "$outs2" ] ; then
 		new_outs=`comm -13 <(echo "$outs1") <(echo "$outs2")`  # <() requires ksh93
@@ -52,6 +54,5 @@ while true; do
 		done
 		outs1="$outs2"
 	fi
-	sleep 5
 done
 kill 0
