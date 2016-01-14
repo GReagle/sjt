@@ -55,7 +55,7 @@ trap 'for child in $(ps -o pid,ppid ax | awk "{ if ( \$2 == $$ ) { print \$1 }}"
 done' HUP INT QUIT TERM EXIT
 #trap "kill 0; exit" HUP INT QUIT TERM EXIT
 
-export style color note_time SJ_DIR SJ_USER
+export style color note_time SJ_USER SJ_SERVER
 sjfs-monitor-outfile out &
 
 ## cat > in  # this works except that it inserts extra new lines

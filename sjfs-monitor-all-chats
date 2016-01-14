@@ -12,10 +12,14 @@ Environment variables:  SJ_DIR"
 : "${note_time:=no}"
 
 : "${SJ_DIR:=}"
+: "${SJ_SERVER:=}"
+: "${SJ_USER:=}"
 
 while [ $# -gt 0 ]; do
 	case "$1" in
 		-d) SJ_DIR="$2"; shift;;
+		-s) SJ_SERVER="$2"; shift;;
+		-u) SJ_USER="$2"; shift;;
 		*)  printf "$(basename $0): invalid option $1\n$usage\n"; exit 1;;
 	esac
 	shift
@@ -29,7 +33,7 @@ trap "kill 0; exit" HUP INT QUIT TERM EXIT  # kill all background jobs
 outs1=`find . -name out | sort`
 if [ "$outs1" ]; then
 	for o in $outs1; do
-		export note_time SJ_DIR SJ_USER
+		export note_time SJ_USER SJ_SERVER
 		style=no color=no sjfs-monitor-outfile "$o" &
 	done
 fi
@@ -43,7 +47,7 @@ while true; do
 			printf "$notice\a\n"
 			[ "$note_time" != no ] && notify-send -t "$note_time" "sjfs-monitor" "$notice"
 			cat "$o"
-			export note_time SJ_DIR SJ_USER
+			export note_time SJ_USER SJ_SERVER
 			style=no color=no sjfs-monitor-outfile "$o" &
 		done
 		outs1="$outs2"

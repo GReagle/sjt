@@ -1,9 +1,9 @@
 #!/bin/ksh93
-set -eu
+set -eux
 : "${DEBUG:=}"
 [ "$DEBUG" ] && set -x
 
-: "${te:=st}"  # terminal emulator, e.g. xterm, st, rxvt
+: "${te:=xterm}"  # terminal emulator, e.g. xterm, st, rxvt
 
 : "${SJ_DIR:=}"
 
@@ -31,17 +31,17 @@ done
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
 
 jid="${SJ_USER}@${SJ_SERVER}"
-$te -T "${jid} - connect" -e dvtm -M "sjfs-connect $@" &
+$te -T "${jid} - connect" -e sjfs-connect "$@" &
 echo After you enter your password in the connect window, hit enter here...
 read line
 echo Announcing presence
 presence -d "$SJ_DIR"
-$te -T "${jid} - buddies" -e dvtm -M "watch -d sjfs-online-buddies -d $SJ_DIR" &
-$te -T "${jid} - monitor-all" -e dvtm -M "sjfs-monitor-all-chats -d $SJ_DIR" &
+$te -T "${jid} - buddies" -e watch -d sjfs-online-buddies -d "$SJ_DIR" &
+$te -T "${jid} - monitor-all" -e sjfs-monitor-all-chats -d "$SJ_DIR" -u "$SJ_USER" -s "$SJ_SERVER" &
 
 # prepare for runit
 echo "#!/bin/sh
-$te -T \$(basename \$PWD) -e sjfs-chat -c" > run
+$te -T \$(basename \$PWD) -e sjfs-chat -c -u $SJ_USER -s $SJ_SERVER" > run
 chmod u+x run
 trap 'kill 0; exit' HUP INT QUIT TERM EXIT
 
