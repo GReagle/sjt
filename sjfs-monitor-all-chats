@@ -4,7 +4,7 @@ set -eu
 [ "$DEBUG" ] && set -x
 
 usage="usage: $(basename $0) [-d <directory>]
-Environment variables:  SJ_DIR"
+Environment variables:  SJ_DIR, SJ_SERVER, SJ_USER"
 
 # Set configuration variable to "no" to disable feature
 #
@@ -40,6 +40,9 @@ fi
 
 while true; do
 	#sleep 5
+	# The only purpose of entr here is to wait for a change in the current
+	# directory; the first true is because entr needs a utility; the second
+	# true is to prevent an error in the script since entr will return 2
 	echo . | entr -pd true || true
 	outs2=`find . -name out | sort`
 	if [ "$outs1" != "$outs2" ] ; then
