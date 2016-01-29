@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 : "${DEBUG:=}"
-[ "$DEBUG" ] && set -x
+[ -n "$DEBUG" ] && set -x
 
 usage="usage: $(basename $0) [<sj options>]
 $(basename $0) passes all options to sj, which see.
@@ -16,7 +16,7 @@ my_sj_server="$SJ_SERVER"
 
 state=""
 for arg; do
-	if [ "$state" ]; then
+	if [ -n "$state" ]; then
 		case "$state" in
 			-s) my_sj_server="$arg";;
 			-d) my_sj_dir="$arg";;
@@ -30,13 +30,13 @@ for arg; do
 	fi
 done
 
-[ "$my_sj_dir" ] || { echo Directory is needed via -d or SJ_DIR; exit 1; }
-[ "$my_sj_server" ] || { echo Server is needed via -s or SJ_SERVER; exit 1; }
+[ -n "$my_sj_dir" ] || { echo Directory is needed via -d or SJ_DIR; exit 1; }
+[ -n "$my_sj_server" ] || { echo Server is needed via -s or SJ_SERVER; exit 1; }
 cd "$my_sj_dir" || { echo cannot cd to "$my_sj_dir"; exit 1; }
 find "$my_sj_dir" -name status -exec rm '{}' ';'
 # to prevent error "tlsc: tls_error: ssl verify setup failure"
 export TLSC_NO_VERIFICATION=1
-if [ "$DEBUG" ]; then
+if [ -n "$DEBUG" ]; then
 	env | fgrep 'SJ_' || true
 	env | fgrep 'TLSC' || true
 fi

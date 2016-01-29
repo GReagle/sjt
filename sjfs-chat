@@ -2,7 +2,7 @@
 # Ctrl-D to end
 set -eu
 : "${DEBUG:=}"
-[ "$DEBUG" ] && set -x
+[ -n "$DEBUG" ] && set -x
 
 usage="usage: $(basename $0) [-dsu] [-c | -b buddy]
 -c: chat in current directory, expecting in and out files to exist
@@ -28,21 +28,21 @@ current_dir=""  # initialize variables
 buddy=""
 while [ $# -gt 0 ]; do
 	case "$1" in
-		-d) [ "$2" ] && SJ_DIR="$2"; shift;;
-		-s) [ "$2" ] && SJ_SERVER="$2"; shift;;
-		-u) [ "$2" ] && SJ_USER="$2"; shift;;
-		-b) [ "$2" ] && buddy="$2"; shift;;
+		-d) [ -n "$2" ] && SJ_DIR="$2"; shift;;
+		-s) [ -n "$2" ] && SJ_SERVER="$2"; shift;;
+		-u) [ -n "$2" ] && SJ_USER="$2"; shift;;
+		-b) [ -n "$2" ] && buddy="$2"; shift;;
 		-c) current_dir=yes ;;
 		*)  printf "$(basename $0): invalid option $1\n$usage\n"; exit 1;;
 	esac
 	shift
 done
 
-if [ "$current_dir" ]; then
+if [ -n "$current_dir" ]; then
 	: # no need to change directory
 else
-	[ "$SJ_DIR" ] || { echo Directory is needed via -d or SJ_DIR; exit 1; }
-	[ "$buddy" ] || { echo Buddy is needed via -b; exit 1; }
+	[ -n "$SJ_DIR" ] || { echo Directory is needed via -d or SJ_DIR; exit 1; }
+	[ -n "$buddy" ] || { echo Buddy is needed via -b; exit 1; }
 	cd "$SJ_DIR"/"$buddy" || { echo cannot cd to "$SJ_DIR"/"$buddy"; exit 1; }
 fi
 [ -e out ] || { echo out file required; exit 1; }

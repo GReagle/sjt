@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 : "${DEBUG:=}"
-[ "$DEBUG" ] && set -x
+[ -n "$DEBUG" ] && set -x
 
 usage="usage: $(basename $0) [-d <directory>]
 Run this command with watch for extra functionality.
@@ -17,12 +17,12 @@ while [ $# -gt 0 ]; do
 	shift
 done
 
-[ "$SJ_DIR" ] || { echo Directory is needed via -d or SJ_DIR; exit 1; }
+[ -n "$SJ_DIR" ] || { echo Directory is needed via -d or SJ_DIR; exit 1; }
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
 pgrep presenced >/dev/null || { echo no presenced; exit 1; }
 
 status="$(find . -maxdepth 2 -name status)"
-if [ "$status" ]; then
+if [ -n "$status" ]; then
 	egrep '.+' $status | sed 's|^\./||g' | sed 's|/status:|:\t|g'
 else
 	echo No status files found

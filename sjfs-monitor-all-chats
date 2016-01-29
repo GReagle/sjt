@@ -1,7 +1,7 @@
 #!/bin/ksh93
 set -eu
 : "${DEBUG:=}"
-[ "$DEBUG" ] && set -x
+[ -n "$DEBUG" ] && set -x
 
 usage="usage: $(basename $0) [-d <directory>]
 Environment variables:  SJ_DIR, SJ_SERVER, SJ_USER"
@@ -25,13 +25,13 @@ while [ $# -gt 0 ]; do
 	shift
 done
 
-[ "$SJ_DIR" ] || { echo Directory is needed via -d or SJ_DIR; exit 1; }
+[ -n "$SJ_DIR" ] || { echo Directory is needed via -d or SJ_DIR; exit 1; }
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
 
 trap "kill 0; exit" HUP INT QUIT TERM EXIT  # kill all background jobs
 
 outs1=`find . -name out | sort`
-if [ "$outs1" ]; then
+if [ -n "$outs1" ]; then
 	for o in $outs1; do
 		export note_time SJ_USER SJ_SERVER
 		style=no color=no sjfs-monitor-outfile "$o" &

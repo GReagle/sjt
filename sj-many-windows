@@ -1,7 +1,7 @@
 #!/bin/ksh93
 set -eux
 : "${DEBUG:=}"
-[ "$DEBUG" ] && set -x
+[ -n "$DEBUG" ] && set -x
 
 : "${te:=xterm}"  # terminal emulator, e.g. xterm, st, rxvt
 
@@ -9,7 +9,7 @@ set -eux
 
 state=""
 for arg; do
-	if [ "$state" ]; then
+	if [ -n "$state" ]; then
 		case "$state" in
 			-d) SJ_DIR="$arg";;
 			-u) SJ_USER="$arg";;
@@ -27,7 +27,7 @@ for arg; do
 	fi
 done
 
-[ "$SJ_DIR" ] || { echo SJ_DIR is not defined; exit 1; }
+[ -n "$SJ_DIR" ] || { echo SJ_DIR is not defined; exit 1; }
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
 
 jid="${SJ_USER}@${SJ_SERVER}"
