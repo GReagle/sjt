@@ -33,7 +33,7 @@ local typing_win = Cs.newwin(typing_lines, s_cols, s_lines - typing_lines, 0)
 typing_win:keypad(true)
 typing_win:scrollok(true)
 typing_win:clear()
-typing_winn:refresh()
+typing_win:refresh()
 
 display_win:scrollok(true)
 display_win:clear()
