@@ -56,12 +56,12 @@ If you interrupt/kill sj-many-windows, it will shut down everything.
 However, you can close any of the other windows that pop up if you wish.
 Of course if you close the "connect" window you will lose your connection.
 
-sj-many-windows interoperates fines with sjfs commands in general; you can
+sj-many-windows interoperates well with sjfs commands in general; you can
 mix them together.  For example, if you have started sj-many-windows, you
 can still run sjfs-online-buddies or sjfs-chat whenever you want.
 
 ## runtime configuration via environment variables
 
 Many of the commands use environment variables for runtime configuration.
-See the beginning of the script for such variables.  For example: ````env
-DEBUG=1 note_time=200 sjfs-monitor-all-chats````
+See the beginning of the script for such variables.  For example: `env
+DEBUG=1 note_time=200 sjfs-monitor-all-chats`
