@@ -1,0 +1,3 @@
+#!/bin/sh
+
+sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g'

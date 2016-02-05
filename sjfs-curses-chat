@@ -65,6 +65,8 @@ while true do
 				if line == 'q' then
 					break
 				end
+				line = string.gsub(line, '&', '&amp;')
+				line = string.gsub(line, '<', '&lt;')
 				in_fifo:write(line)
 				line = ''
 				typing_win:clear()

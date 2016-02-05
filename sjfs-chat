@@ -61,7 +61,7 @@ sjfs-monitor-outfile out &
 ## cat > in  # this works except that it inserts extra new lines
 while read -r line
 do
-	printf '%s' "$line" >> in
+	printf '%s' "$line" | escape-xml >> in
 done
 
 kill 0  # kill the background jobs
