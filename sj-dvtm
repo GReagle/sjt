@@ -40,7 +40,8 @@ con="set-title connect\ $jid; sjfs-connect $@"
 
 : "${DVTM_CMD_FIFO:=}"
 if [ -z "$DVTM_CMD_FIFO" ] ; then
-	dvtm -c "$HOME"/dvtm-cmd-$$ "$bud" "$mon" "$reg" "$con"
+	DVTM_CMD_FIFO="$HOME"/dvtm-cmd-$$
+	dvtm -c "$DVTM_CMD_FIFO" "$bud" "$mon" "$reg" "$con"
 else  # we're already inside of a dvtm session with a command fifo
 	dvtm_new_window "$bud"
 	dvtm_new_window "$mon"
@@ -52,8 +53,6 @@ echo pause
 read pause
 
 # prepare for runit
-#echo -E "#!/bin/sh
-#$te -T \$(basename \$PWD) -e sjfs-chat -c -u $SJ_USER -s $SJ_SERVER" > run
 printf '#!/bin/sh
 printf "create \\"sjfs-chat -c -u %s -s %s\\" TITLE $PWD\\n" > $DVTM_CMD_FIFO
 sleep 60
