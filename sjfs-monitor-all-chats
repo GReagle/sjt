@@ -39,10 +39,9 @@ if [ -n "$outs1" ]; then
 fi
 
 while true; do
-	#sleep 5
-	# The only purpose of entr here is to wait for a change in the current
-	# directory; the first true is because entr needs a utility; the second
-	# true is to prevent an error in the script since entr will return 2
+	# entr waits for a change in directories within $SJ_DIR
+	# 1st true is because entr needs a utility; 2nd true
+	# prevents an error in this script since entr returns 2
 	echo "`find . -type d`" | entr -pd true || true
 	outs2=`find . -name out | sort`
 	if [ "$outs1" != "$outs2" ] ; then
