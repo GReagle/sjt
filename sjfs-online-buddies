@@ -5,14 +5,15 @@ set -eu
 
 usage="usage: $(basename $0) [-d <directory>]
 Run this command with watch for extra functionality.
-Environment variables:  SJ_DIR"
+Environment variables:  SJ_DIR
+"
 
 : "${SJ_DIR:=}"
 
 while [ $# -gt 0 ]; do
 	case "$1" in
 		-d) SJ_DIR="$2"; shift;;
-		*)  printf "$(basename $0): invalid option $1\n$usage\n"; exit 1;;
+		*)  printf "$(basename $0): invalid option $1\n$usage"; exit 1;;
 	esac
 	shift
 done
@@ -21,9 +22,9 @@ done
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
 pgrep presenced >/dev/null || { echo no presenced; exit 1; }
 
-status="$(find . -maxdepth 2 -name status)"
-if [ -n "$status" ]; then
-	egrep '.+' $status | sed 's|^\./||g' | sed 's|/status:|:\t|g'
+status_files="$(find . -maxdepth 2 -name status)"
+if [ -n "$status_files" ]; then
+	egrep '.+' $status_files | sed 's|^\./||g' | sed 's|/status:|:\t|g'
 else
 	echo No status files found
 	exit 1
