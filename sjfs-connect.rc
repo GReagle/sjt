@@ -1,0 +1,45 @@
+#!/usr/bin/env rc
+flag e +
+~ $DEBUG ?* && flag x +
+
+usage='usage: ' ^ `{basename $0} ^ ' [<sj options>]
+This command passes all options to sj, which see.
+Environment variables:  all from sj(1) and port
+'
+
+~ $port ?* || port=5223
+
+my_sj_dir=$SJ_DIR
+my_sj_server=$SJ_SERVER
+
+state=''
+for (arg) {
+	if (~ $state ?*) {
+		switch($state) {
+		case -s; my_sj_server=$arg
+		case -d; my_sj_dir=$arg
+		}
+		state=''
+	}
+	if not {
+		switch($arg) {
+		case -[sd]; state=$arg
+		case -h; printf $usage; exit 1
+		}
+	}
+}
+
+~ $my_sj_dir ?* || { echo Directory is needed via -d or SJ_DIR; exit 1; }
+~ $my_sj_server ?* || { echo Server is needed via -s or SJ_SERVER; exit 1; }
+cd $my_sj_dir || { echo cannot cd to $my_sj_dir; exit 1; }
+find $my_sj_dir -name status -exec rm '{}' ';'
+# to prevent error "tlsc: tls_error: ssl verify setup failure"
+TLSC_NO_VERIFICATION=1
+if (~ $DEBUG ?*) {
+	env | fgrep 'SJ_'
+	env | fgrep 'TLSC'
+}
+~ $port 5223 && tlsc=tlsc || tlsc=()
+POSIXLY_CORRECT=yes tcpclient $my_sj_server $port $tlsc sj $*
+# POSIXLY_CORRECT is to prevent error "tlsc: invalid option", to make GNU
+# getopt() behave well; see https://github.com/younix/ucspi/issues/5
