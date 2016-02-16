@@ -1,0 +1,64 @@
+#!/usr/bin/env rc
+# Ctrl-D to end
+flag e +
+~ $DEBUG ?* && flag x +
+
+usage='usage: ' ^ `{basename $0} ^ ' [-dsu] [-c | -b buddy]
+-c: chat in current directory, expecting in and out files to exist
+-b: chat with specified buddy
+See sj(1) for explanation of options d, s, and u.
+Environment variables:  all from sj(1) and style, color, note_time'
+
+# Set configuration variable to "no" to disable feature
+#
+# style of incming message:  a style for tput e.g. bold, dim, blink, smul
+# (underlined), rev (reverse), smso (standout)
+~ $style ?* || style=no
+# color of incoming message:  a color for tput setaf, e.g. 1-7
+~ $color ?* || color=1
+# number of milliseconds for the notify-send timeout
+~ $note_time ?* || note_time=500
+
+current_dir=''  # initialize variables
+buddy=''
+state=''
+for (arg) {
+	if(~ $state ?*) {
+		switch($state) {
+		case -d; SJ_DIR=$arg
+		case -s; SJ_SERVER=$arg
+		case -u; SJ_USER=$arg
+		case -b; buddy=$arg
+		}
+		state=''
+	}
+	if not {
+		switch($arg) {
+		case -[dsub]; state=$arg
+		case -c; current_dir=yes
+		case *
+			printf '%s: invalid option: %s\n%s\n' `{basename $0} $arg $usage
+			exit 1
+		}
+	}
+}
+
+if(! ~ $current_dir ?*) {
+	~ $SJ_DIR ?* || { echo Directory is needed via -d or SJ_DIR; exit 1; }
+	~ $buddy ?* || { echo Buddy is needed via -b; exit 1; }
+	cd $SJ_DIR/$buddy || { echo cannot cd to $SJ_DIR/$buddy; exit 1; }
+}
+[ -e out ] || { echo out file required; exit 1; }
+[ -p in ] || { echo in file required and must be a named pipe; exit 1; }
+cat out  # show the conversation so far
+
+sjfs-monitor-outfile out &
+bg_job=$apid
+fn sigint  { kill -TERM -$bg_job } # kill the background job
+fn sigquit { kill -TERM -$bg_job }
+fn sighup  { kill -TERM -$bg_job }
+fn sigterm { kill -TERM -$bg_job }
+fn sigexit { kill -TERM -$bg_job }
+
+cat > in  # Ctrl-D to end
+kill -TERM -$bg_job # kill the background job
