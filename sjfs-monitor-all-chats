@@ -28,8 +28,6 @@ done
 [ -n "$SJ_DIR" ] || { echo Directory is needed via -d or SJ_DIR; exit 1; }
 cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
 
-trap "kill 0; exit" HUP INT QUIT TERM EXIT  # kill all background jobs
-
 outs1=`find . -name out | sort`
 if [ -n "$outs1" ]; then
 	for o in $outs1; do
@@ -37,6 +35,8 @@ if [ -n "$outs1" ]; then
 		style=no color=no sjfs-monitor-outfile "$o" &
 	done
 fi
+
+trap "/bin/kill -TERM -$$" HUP INT QUIT TERM EXIT  # kill all background jobs
 
 while true; do
 	# entr waits for a change in directories within $SJ_DIR.
@@ -60,4 +60,4 @@ while true; do
 		outs1="$outs2"
 	fi
 done
-kill 0
+/bin/kill -TERM -$$

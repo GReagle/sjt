@@ -38,30 +38,19 @@ while [ $# -gt 0 ]; do
 	shift
 done
 
-if [ -n "$current_dir" ]; then
-	: # no need to change directory
-else
+if [ -z "$current_dir" ]; then
 	[ -n "$SJ_DIR" ] || { echo Directory is needed via -d or SJ_DIR; exit 1; }
 	[ -n "$buddy" ] || { echo Buddy is needed via -b; exit 1; }
 	cd "$SJ_DIR"/"$buddy" || { echo cannot cd to "$SJ_DIR"/"$buddy"; exit 1; }
 fi
+
 [ -e out ] || { echo out file required; exit 1; }
 [ -p in ] || { echo in file required and must be a named pipe; exit 1; }
 cat out  # show the conversation so far
 
-# kill the background jobs
-trap 'for child in $(ps -o pid,ppid ax | awk "{ if ( \$2 == $$ ) { print \$1 }}"); do
-	ps $child >/dev/null && kill $child || true
-done' HUP INT QUIT TERM EXIT
-#trap "kill 0; exit" HUP INT QUIT TERM EXIT
-
 export style color note_time SJ_USER SJ_SERVER
 sjfs-monitor-outfile out &
+trap "/bin/kill -TERM -$$" HUP INT QUIT TERM EXIT  # kill the background job
 
-## cat > in  # this works except that it inserts extra new lines
-while read -r line
-do
-	printf '%s' "$line" >> in
-done
-
-kill 0  # kill the background jobs
+cat > in  # Ctrl-D to end
+/bin/kill -TERM -$$  # kill the background job
