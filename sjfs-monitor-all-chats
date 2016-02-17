@@ -42,7 +42,7 @@ while true; do
 	# entr waits for a change in directories within $SJ_DIR.
 	# 1st true is because entr needs a utility.
 	# 2nd true prevents an error in this script since entr returns 2.
-	echo "`find . -type d`" | entr -pd true || true
+	find . -type d | entr -pd true || true
 	outs2=`find . -name out | sort`
 	if [ "$outs1" != "$outs2" ] ; then
 		o1f=$(mktemp) || exit 1 && echo "$outs1" > "$o1f"
