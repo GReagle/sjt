@@ -1,0 +1,67 @@
+#!/usr/bin/env rc
+flag e +
+~ $DEBUG ?* && set -x
+
+usage='usage: ' ^ `{basename $0} ^ ' [-d <directory>]
+Environment variables:  SJ_DIR, SJ_SERVER, SJ_USER'
+
+# Set configuration variable to "no" to disable feature
+#
+# number of milliseconds for the notify-send timeout
+~ $note_time ?* || note_time=no
+
+state=''
+for (arg) {
+	if(~ $state ?*) {
+		switch($state) {
+		case -d; SJ_DIR=$arg
+		case -s; SJ_SERVER=$arg
+		case -u; SJ_USER=$arg
+		}
+		state=''
+	}
+	if not {
+		switch($arg) {
+		case -[dsu]; state=$arg
+		case *
+			printf '%s: invalid option: %s\n%s\n' `{basename $0} $arg $usage
+			exit 1
+		}
+	}
+}
+
+~ $SJ_DIR ?* || { echo Directory is needed via -d or SJ_DIR; exit 1; }
+cd $SJ_DIR || { echo cannot cd to $SJ_DIR; exit 1; }
+
+outs1=`{find . -name out | sort}
+if (~ $outs1 ?*) {
+	for (o in $outs1) {
+		style=no color=no sjfs-monitor-outfile $o &
+	}
+}
+
+trap "/bin/kill -TERM -$$" HUP INT QUIT TERM EXIT  # kill all background jobs
+
+while true; do
+	# entr waits for a change in directories within $SJ_DIR.
+	# 1st true is because entr needs a utility.
+	# 2nd true prevents an error in this script since entr returns 2.
+	echo "`find . -type d`" | entr -pd true || true
+	outs2=`find . -name out | sort`
+	if [ "$outs1" != "$outs2" ] ; then
+		o1f=$(mktemp) || exit 1 && echo "$outs1" > "$o1f"
+		o2f=$(mktemp) || exit 1 && echo "$outs2" > "$o2f"
+		new_outs=`comm -13 "$o1f" "$o2f"`
+		rm "$o1f" "$o2f"
+		for o in $new_outs; do
+			notice="new chat from $(basename $(dirname $o))"
+			printf "$notice\a\n"
+			[ "$note_time" != no ] && notify-send -t "$note_time" "sjfs-monitor" "$notice"
+			cat "$o"
+			export note_time SJ_USER SJ_SERVER
+			style=no color=no sjfs-monitor-outfile "$o" &
+		done
+		outs1="$outs2"
+	fi
+done
+/bin/kill -TERM -$$
