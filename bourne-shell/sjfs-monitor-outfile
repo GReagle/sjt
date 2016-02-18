@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+: "${DEBUG:=}"
+[ -n "$DEBUG" ] && set -x
+
+tail -f -n0 "$1" | while IFS= read -r line; do
+	[ "$color" != no ] && tput setaf "$color"
+	[ "$style" != no ] && tput "$style"
+	printf '%s\n' "$line"
+	tput sgr0  # Turn off all attributes: back to normal
+	if echo "$line" | egrep -q "^[[:digit:]]{4}-[[:digit:]]{2}-[[:digit:]]{2} [[:digit:]]{2}:[[:digit:]]{2} <${SJ_USER}@${SJ_SERVER}"; then
+		:  # this is a message that I sent myself, so don't notify
+	else
+		printf '\a'
+		[ "$note_time" != no ] && notify-send -t "$note_time" "sjfs-chat: $(basename $(pwd))" "$(echo "$line" | cut -d\> -f2-)"
+	fi
+done

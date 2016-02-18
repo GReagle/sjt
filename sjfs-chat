@@ -60,5 +60,6 @@ fn sighup  { kill -TERM -$bg_job }
 fn sigterm { kill -TERM -$bg_job }
 fn sigexit { kill -TERM -$bg_job }
 
-cat > in  # Ctrl-D to end
+# Ctrl-D to end
+cat > in
 kill -TERM -$bg_job # kill the background job
