@@ -1,0 +1,49 @@
+#!/bin/sh
+set -eu
+: "${DEBUG:=}"
+[ -n "$DEBUG" ] && set -x
+
+usage="usage: $(basename $0) [<sj options>]
+$(basename $0) passes all options to sj, which see.
+Environment variables:  all from sj(1) and port"
+
+: "${SJ_DIR:=}"
+: "${SJ_SERVER:=}"
+: "${port:=5223}"
+
+my_sj_dir="$SJ_DIR"
+my_sj_server="$SJ_SERVER"
+
+state=""
+for arg; do
+	if [ -n "$state" ]; then
+		case "$state" in
+			-s) my_sj_server="$arg";;
+			-d) my_sj_dir="$arg";;
+		esac
+		state=""
+	else
+		case "$arg" in
+			-s | -d ) state="$arg";;
+			-h ) echo "$usage"; exit;;
+		esac
+	fi
+done
+
+[ -n "$my_sj_dir" ] || { echo Directory is needed via -d or SJ_DIR; exit 1; }
+[ -n "$my_sj_server" ] || { echo Server is needed via -s or SJ_SERVER; exit 1; }
+cd "$my_sj_dir" || { echo cannot cd to "$my_sj_dir"; exit 1; }
+find "$my_sj_dir" -name status -exec rm '{}' ';'
+# to prevent error "tlsc: tls_error: ssl verify setup failure"
+export TLSC_NO_VERIFICATION=1
+if [ -n "$DEBUG" ]; then
+	env | fgrep 'SJ_' || true
+	env | fgrep 'TLSC' || true
+fi
+[ "$port" = 5223 ] && tlsc=tlsc || tlsc=""
+env POSIXLY_CORRECT=yes tcpclient "$my_sj_server" "$port" $tlsc sj "$@"
+
+# POSIXLY_CORRECT is to prevent error "tlsc: invalid option", to make GNU
+# getopt() behave well; see https://github.com/younix/ucspi/issues/5
+
+exit

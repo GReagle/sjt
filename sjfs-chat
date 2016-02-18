@@ -1,56 +1,64 @@
-#!/bin/sh
+#!/usr/bin/env rc
 # Ctrl-D to end
-set -eu
-: "${DEBUG:=}"
-[ -n "$DEBUG" ] && set -x
+flag e +
+~ $DEBUG ?* && flag x +
 
-usage="usage: $(basename $0) [-dsu] [-c | -b buddy]
+usage='usage: ' ^ `{basename $0} ^ ' [-dsu] [-c | -b buddy]
 -c: chat in current directory, expecting in and out files to exist
 -b: chat with specified buddy
 See sj(1) for explanation of options d, s, and u.
-Environment variables:  all from sj(1) and style, color, note_time"
+Environment variables:  all from sj(1) and style, color, note_time'
 
 # Set configuration variable to "no" to disable feature
 #
 # style of incming message:  a style for tput e.g. bold, dim, blink, smul
 # (underlined), rev (reverse), smso (standout)
-: "${style:=no}"
+~ $style ?* || style=no
 # color of incoming message:  a color for tput setaf, e.g. 1-7
-: "${color:=1}"
+~ $color ?* || color=1
 # number of milliseconds for the notify-send timeout
-: "${note_time:=500}"
+~ $note_time ?* || note_time=500
 
-: "${SJ_DIR:=}"
-: "${SJ_SERVER:=}"
-: "${SJ_USER:=}"
+current_dir=''  # initialize variables
+buddy=''
+state=''
+for (arg) {
+	if(~ $state ?*) {
+		switch($state) {
+		case -d; SJ_DIR=$arg
+		case -s; SJ_SERVER=$arg
+		case -u; SJ_USER=$arg
+		case -b; buddy=$arg
+		}
+		state=''
+	}
+	if not {
+		switch($arg) {
+		case -[dsub]; state=$arg
+		case -c; current_dir=yes
+		case *
+			printf '%s: invalid option: %s\n%s\n' `{basename $0} $arg $usage
+			exit 1
+		}
+	}
+}
 
-current_dir=""  # initialize variables
-buddy=""
-while [ $# -gt 0 ]; do
-	case "$1" in
-		-d) [ -n "$2" ] && SJ_DIR="$2"; shift;;
-		-s) [ -n "$2" ] && SJ_SERVER="$2"; shift;;
-		-u) [ -n "$2" ] && SJ_USER="$2"; shift;;
-		-b) [ -n "$2" ] && buddy="$2"; shift;;
-		-c) current_dir=yes ;;
-		*)  printf "$(basename $0): invalid option $1\n$usage\n"; exit 1;;
-	esac
-	shift
-done
-
-if [ -z "$current_dir" ]; then
-	[ -n "$SJ_DIR" ] || { echo Directory is needed via -d or SJ_DIR; exit 1; }
-	[ -n "$buddy" ] || { echo Buddy is needed via -b; exit 1; }
-	cd "$SJ_DIR"/"$buddy" || { echo cannot cd to "$SJ_DIR"/"$buddy"; exit 1; }
-fi
-
+if(! ~ $current_dir ?*) {
+	~ $SJ_DIR ?* || { echo Directory is needed via -d or SJ_DIR; exit 1; }
+	~ $buddy ?* || { echo Buddy is needed via -b; exit 1; }
+	cd $SJ_DIR/$buddy || { echo cannot cd to $SJ_DIR/$buddy; exit 1; }
+}
 [ -e out ] || { echo out file required; exit 1; }
 [ -p in ] || { echo in file required and must be a named pipe; exit 1; }
 cat out  # show the conversation so far
 
-export style color note_time SJ_USER SJ_SERVER
 sjfs-monitor-outfile out &
-trap "/bin/kill -TERM -$$" HUP INT QUIT TERM EXIT  # kill the background job
+bg_job=$apid
+fn sigint  { kill -TERM -$bg_job } # kill the background job
+fn sigquit { kill -TERM -$bg_job }
+fn sighup  { kill -TERM -$bg_job }
+fn sigterm { kill -TERM -$bg_job }
+fn sigexit { kill -TERM -$bg_job }
 
 cat > in  # Ctrl-D to end
-/bin/kill -TERM -$$  # kill the background job
+kill -TERM -$bg_job # kill the background job

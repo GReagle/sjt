@@ -1,42 +1,45 @@
-#!/bin/sh
-set -eu
-: "${DEBUG:=}"
-[ -n "$DEBUG" ] && set -x
+#!/usr/bin/env rc
+flag e +
+~ $DEBUG ?* && flag x +
 
-usage="usage: $(basename $0) [-d <directory>]
+usage='usage: ' ^ `{basename $0} ^ ' [-d <directory>]
 Run this command with watch for extra functionality.
 Environment variables:  SJ_DIR
-"
+'
 
-: "${SJ_DIR:=}"
+switch($#*) {
+case 0
+	true # do nothing
+case 2
+	if (~ $1 -d) SJ_DIR=$2
+	if not {
+		printf '%s: invalid option: %s\n%s' `{basename $0} $1 $usage
+		exit 1
+	}
+case *
+	printf '%s: wrong number of arguments\n%s' `{basename $0} $usage
+	exit 1
+}
 
-while [ $# -gt 0 ]; do
-	case "$1" in
-		-d) SJ_DIR="$2"; shift;;
-		*)  printf "$(basename $0): invalid option $1\n$usage"; exit 1;;
-	esac
-	shift
-done
-
-[ -n "$SJ_DIR" ] || { echo Directory is needed via -d or SJ_DIR; exit 1; }
-cd "$SJ_DIR" || { echo cannot cd to "$SJ_DIR"; exit 1; }
+~ $SJ_DIR ?* || { echo Directory is needed via -d or SJ_DIR; exit 1; }
+cd $SJ_DIR || { echo cannot cd to $SJ_DIR; exit 1; }
 pgrep presenced >/dev/null || { echo no presenced; exit 1; }
 
-status_files="$(find . -maxdepth 2 -name status)"
-if [ -n "$status_files" ]; then
+status_files=`{find . -maxdepth 2 -name status}
+if (~ $status_files ?*)
 	egrep '.+' $status_files | sed 's|^\./||g' | sed 's|/status:|:\t|g'
-else
+if not {
 	echo No status files found
 	exit 1
-fi
+}
 
 echo
 echo Offline Buddies
 echo ---------------
-for f in *; do
-	if [ -d "$f" ]; then
-		if [ ! -s "$f"/status ]; then
-			echo "$f"
-		fi
-	fi
-done
+for (f in *) {
+	if ([ -d $f ]) {
+		if ([ ! -s $f/status ]) {
+			echo $f
+		}
+	}
+}
