@@ -1,0 +1,85 @@
+#!/usr/bin/env rc
+flag e +
+~ $DEBUG ?* && flag x +
+
+~ $te ?* || te=xterm  # terminal emulator, e.g. xterm, st, rxvt
+
+state=''
+for (arg) {
+	if (~ $state ?*) {
+		switch($state) {
+			case -d; SJ_DIR=$arg
+			case -u; SJ_USER=$arg
+			case -r; SJ_RESOURCE=$arg
+			case -s; SJ_SERVER=$arg
+			case *; echo invalid state; exit 1
+		}
+		state=''
+	}
+	if not {
+		switch($arg) {
+			case -[durs]; state=$arg
+			case -D;
+			case *;
+				printf '%s: invalid option: %s\n' `{basename $0} $arg;
+				exit 1;
+		}
+	}
+}
+
+~ $SJ_DIR ?* || { echo SJ_DIR is not defined; exit 1; }
+cd $SJ_DIR || { echo cannot cd to "$SJ_DIR"; exit 1; }
+
+jid=$SJ_USER@$SJ_SERVER
+true $jid  #this shows variable when DEBUG is set
+
+$te -T 'connect - '^$jid -e sjfs-connect $* &
+echo After you enter your password in the connect window, hit enter here...
+line >/dev/null
+echo Announcing presence
+presence -d $SJ_DIR
+$te -T 'buddies - '^$jid -e watch -d sjfs-online-buddies -d $SJ_DIR &
+$te -T 'monitor-all - '^$jid -e sjfs-monitor-all-chats -d $SJ_DIR -u $SJ_USER -s $SJ_SERVER &
+
+exit 0
+
+# prepare for runit
+echo "#!/bin/sh
+$te -T \$(basename \$PWD) -e sjfs-chat -c -u $SJ_USER -s $SJ_SERVER" > run
+chmod u+x run
+trap 'kill 0; exit' HUP INT QUIT TERM EXIT
+
+outs1=`find . -name out | sort`
+for o in $outs1; do
+	dir=$(dirname "$o")
+	touch "$dir"/down
+	[ -e "$dir"/run ] || ln -s ../run "$dir"
+	runsv "$dir" &
+	tail -f -n0 "$o" | while IFS= read -r line; do
+		sv once "$dir"
+	done &
+done
+
+while true; do
+	#sleep 5
+	# The only purpose of entr here is to wait for a change in the current
+	# directory; the first true is because entr needs a utility; the second
+	# true is to prevent an error in the script since entr will return 2
+	echo . | entr -pd true || true
+	outs2=`find . -name out | sort`
+	if [ "$outs1" != "$outs2" ] ; then
+		new_outs=`comm -13 <(echo "$outs1") <(echo "$outs2")`  # <() requires ksh93
+		for o in $new_outs; do
+			dir=$(dirname "$o")
+			touch "$dir"/down
+			[ -e "$dir"/run ] || ln -s ../run "$dir"
+			runsv "$dir" &
+			tail -f -n0 "$o" | while IFS= read -r line; do
+				sv once "$dir"
+			done &
+		done
+		outs1="$outs2"
+	fi
+done
+
+exit 0
