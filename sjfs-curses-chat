@@ -3,9 +3,41 @@ require('strict')
 local Px = require('posix')
 local Cs = require('curses')
 
-local typing_lines = 2  -- size of the input window
+local SJ_DIR = ''
+local SJ_SERVER = ''
+local SJ_USER = ''
+local current_dir = false
+local buddy = ''
+local state = ''
+for _, v in ipairs(arg) do
+	if state == '' then
+		if v == '-c' then current_dir = true
+		elseif v == '-d' or v == '-s' or v == '-u' or v == '-b' then
+			state = v
+		else 
+			print(arg[0]..': invalid option: '..v)
+			os.exit(false)
+		end
+	else
+		if     state == '-d' then SJ_DIR = v
+		elseif state == '-s' then SJ_SERVER = v
+		elseif state == '-u' then SJ_USER = v
+		elseif state == '-b' then buddy = v
+		else os.exit(false)
+		end
+		state = ''
+	end
+end
 
-local tail_out = assert(io.popen('tail -f -n0 out', 'r'))
+if current_dir then
+	buddy = './'
+else
+	buddy = SJ_DIR .. '/'
+end
+
+print(buddy)
+
+local tail_out = assert(io.popen('tail -f -n0 ' .. buddy .. 'out', 'r'))
 assert(tail_out:setvbuf('no'))
 local tail_out_fd = Px.fileno(tail_out)
 
@@ -16,7 +48,7 @@ local fds = {
 	[stdin_fd] = { events = {IN=true} }
 }
 
-local in_fifo = io.open('in', 'a')
+local in_fifo = io.open(buddy .. 'in', 'a')
 assert(in_fifo:setvbuf('no'))
 
 Cs.initscr()
@@ -26,6 +58,7 @@ local stdscr = Cs.stdscr()
 stdscr:clear()
 stdscr:refresh()
 
+local typing_lines = 2  -- size of the input window
 local s_lines, s_cols = stdscr:getmaxyx()
 local display_win = Cs.newwin(s_lines - typing_lines, s_cols, 0, 0)
 local typing_win = Cs.newwin(typing_lines, s_cols, s_lines - typing_lines, 0)
