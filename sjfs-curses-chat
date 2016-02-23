@@ -3,41 +3,57 @@ require('strict')
 local Px = require('posix')
 local Cs = require('curses')
 
-local SJ_DIR = ''
-local SJ_SERVER = ''
-local SJ_USER = ''
+local SJ_DIR = os.getenv('SJ_DIR')
+local SJ_SERVER = os.getenv('SJ_SERVER')
+local SJ_USER = os.getenv('SJ_USER')
 local current_dir = false
-local buddy = ''
-local state = ''
-for _, v in ipairs(arg) do
-	if state == '' then
-		if v == '-c' then current_dir = true
-		elseif v == '-d' or v == '-s' or v == '-u' or v == '-b' then
-			state = v
+local buddy = nil
+
+local skip = false
+for i = 1, #arg do
+	if skip then
+		skip = false
+	else
+		if     arg[i] == '-c' then current_dir = true
+		elseif arg[i] == '-d' then SJ_DIR = arg[i+1]; skip=true
+		elseif arg[i] == '-s' then SJ_SERVER = arg[i+1]; skip=true
+		elseif arg[i] == '-u' then SJ_USER = arg[i+1]; skip=true
+		elseif arg[i] == '-b' then buddy = arg[i+1]; skip=true
 		else 
 			print(arg[0]..': invalid option: '..v)
 			os.exit(false)
 		end
-	else
-		if     state == '-d' then SJ_DIR = v
-		elseif state == '-s' then SJ_SERVER = v
-		elseif state == '-u' then SJ_USER = v
-		elseif state == '-b' then buddy = v
-		else os.exit(false)
-		end
-		state = ''
 	end
 end
 
+local chatdir = nil
 if current_dir then
-	buddy = './'
+	chatdir = './'
 else
-	buddy = SJ_DIR .. '/'
+	if (not SJ_DIR) or (SJ_DIR == '') then
+		print('Directory is needed via -d or SJ_DIR')
+		os.exit(false)
+	elseif (not buddy) or (buddy == '') then
+		print('Buddy is needed via -b')
+		os.exit(false)
+ 	else
+		chatdir = SJ_DIR .. '/' .. buddy .. '/'
+	end
 end
 
-print(buddy)
+local outfilename = chatdir .. 'out'
+local infilename = chatdir .. 'in'
+if not os.execute('test -e ' .. outfilename) then
+	print('out file required')
+	print('attempted to open ' .. outfilename)
+	os.exit(false)
+elseif not os.execute('test -p ' .. infilename) then
+	print('in file required and must be a named pipe')
+	print('attempted to open ' .. infilename)
+	os.exit(false)
+end
 
-local tail_out = assert(io.popen('tail -f -n0 ' .. buddy .. 'out', 'r'))
+local tail_out = assert(io.popen('tail -f -n0 ' .. outfilename, 'r'))
 assert(tail_out:setvbuf('no'))
 local tail_out_fd = Px.fileno(tail_out)
 
@@ -48,11 +64,11 @@ local fds = {
 	[stdin_fd] = { events = {IN=true} }
 }
 
-local in_fifo = io.open(buddy .. 'in', 'a')
+local in_fifo = io.open(chatdir .. 'in', 'a')
 assert(in_fifo:setvbuf('no'))
 
 Cs.initscr()
-Cs.cbreak(true)
+--Cs.cbreak(false)
 Cs.echo(false)
 local stdscr = Cs.stdscr()
 stdscr:clear()
@@ -66,10 +82,16 @@ local typing_win = Cs.newwin(typing_lines, s_cols, s_lines - typing_lines, 0)
 typing_win:keypad(true)
 typing_win:scrollok(true)
 typing_win:clear()
+typing_win:addstr('Type q then Enter to quit\n')
 typing_win:refresh()
 
 display_win:scrollok(true)
 display_win:clear()
+for ll in io.lines(outfilename) do
+	display_win:addstr(ll .. '\n')
+	display_win:refresh()
+end
+display_win:addstr('-------\n')
 display_win:refresh()
 
 local line = ''
@@ -89,6 +111,8 @@ while true do
 				s = string.char(c)
 				typing_win:addstr(s)
 				typing_win:refresh()
+				display_win:addstr('i')
+				display_win:refresh()
 			else
 				s = ''
 				--typing_win:addstr('What kind of character is this?')
