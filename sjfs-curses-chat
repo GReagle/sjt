@@ -1,7 +1,11 @@
 #!/usr/bin/env lua
 require('strict')
+os.setlocale('')
 local Px = require('posix')
 local Cs = require('curses')
+-- These constants should be defined in lua-posix, but they're not
+local KEY_MIN = 257
+local KEY_MAX = 511
 
 local function isempty(var)
 	return (not var) or (var == '')
@@ -23,7 +27,7 @@ for i = 1, #arg do
 		elseif arg[i] == '-s' then SJ_SERVER = arg[i+1]; skip=true
 		elseif arg[i] == '-u' then SJ_USER = arg[i+1]; skip=true
 		elseif arg[i] == '-b' then buddy = arg[i+1]; skip=true
-		else 
+		else
 			print(arg[0]..': invalid option: '..v)
 			os.exit(false)
 		end
@@ -90,40 +94,41 @@ display_win:addstr('-------\n')
 display_win:refresh()
 
 local line = ''
-local s = ''
 while true do
 	local poll_result = Px.poll(fds, -1)
 	if poll_result == 0 then  -- timeout
 		break
 	elseif poll_result == 1 then
-		if  fds[tail_out_fd].revents.IN then
+		if fds[tail_out_fd].revents.IN then
 			display_win:addstr(tail_out:read('*l') .. '\n')
 			display_win:refresh()
 			-- Cs.beep()
-		elseif  fds[stdin_fd].revents.IN then
+		elseif fds[stdin_fd].revents.IN then
 			local c = typing_win:getch()
-			if c < 256 then
-				s = string.char(c)
-				typing_win:addstr(s)
-				typing_win:refresh()
-				display_win:refresh()
-			else
-				s = ''
-				--typing_win:addstr('What kind of character is this?')
-				--typing_win:refresh()
-			end
-			if s == '\n' then
-				if line == 'q' then
-					break
-				end
+			if c == 10 then  -- newline
+				if line == 'q' then break end
 				in_fifo:write(line)
 				line = ''
 				typing_win:clear()
 				typing_win:addstr('Type q then Enter to quit\n')
-				typing_win:refresh()
+			elseif c == Cs.KEY_BACKSPACE then
+				if line == '' then
+					Cs.beep()
+				else
+					line = string.sub(line, 1, #line-1)
+					local y, x = typing_win:getyx()
+					typing_win:move(y, x-1)
+					typing_win:delch()
+				end
+			elseif c < 32 or c == 127 then
+				; -- ignore ascii control characters
+			elseif c >= KEY_MIN and c <= KEY_MAX then
+				; -- ignore function keys
 			else
-				line = line .. s
+				typing_win:addch(c)
+				line = line .. string.char(c)
 			end
+			typing_win:refresh()
 		else
 			typing_win:addstr('What kind of event is this?')
 			typing_win:refresh()
