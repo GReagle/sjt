@@ -33,6 +33,12 @@ cd $SJ_DIR || { echo cannot cd to "$SJ_DIR"; exit 1; }
 jid=$SJ_USER@$SJ_SERVER
 true $jid  #this shows variable when DEBUG is set
 
+fn sigint  { for (job in $bg_jobs) kill -TERM -$job; exit 1 }
+fn sigquit { for (job in $bg_jobs) kill -TERM -$job; exit 2 }
+fn sighup  { for (job in $bg_jobs) kill -TERM -$job; exit 3 }
+fn sigterm { for (job in $bg_jobs) kill -TERM -$job; exit 4 }
+fn sigexit { for (job in $bg_jobs) kill -TERM -$job; exit 5 }
+
 bg_jobs=()
 $te -T 'connect - '$jid -e sjfs-connect $* &
 bg_jobs=($bg_jobs $apid)
@@ -63,34 +69,25 @@ for (o in $outs1) {
 	bg_jobs=($bg_jobs $apid)
 }
 
-echo Hit enter to end all
-line
-#for (job in $bg_jobs) {/bin/kill -$job; }
-kill -$bg_jobs
-exit 0
-
-while true; do
-	#sleep 5
+while (true) {
 	# The only purpose of entr here is to wait for a change in the current
 	# directory; the first true is because entr needs a utility; the second
 	# true is to prevent an error in the script since entr will return 2
-	echo . | entr -pd true || true
-	outs2=`find . -name out | sort`
-	if [ "$outs1" != "$outs2" ] ; then
-		new_outs=`comm -13 <(echo "$outs1") <(echo "$outs2")`  # <() requires ksh93
-		for o in $new_outs; do
-			dir=$(dirname "$o")
-			touch "$dir"/down
-			[ -e "$dir"/run ] || ln -s ../run "$dir"
-			runsv "$dir" &
+	find . -type d | entr -pd true || true
+	outs2=`{find . -name out | sort}
+	if ( ! ~ $"outs1 $"outs2 ) {
+		new_outs=`{comm -13 <{for (s in $outs1) echo $s} <{for (s in $outs2) echo $s} }
+		for (o in $new_outs) {
+			dir=`{dirname $o}
+			touch $dir/down
+			[ -e $dir/run ] || ln -s ../run $dir
+			runsv $dir &
 			bg_jobs=($bg_jobs $apid)
-			tail -f -n0 "$o" | while IFS= read -r line; do
-				sv once "$dir"
-			done &
+			tail -f -n0 $o | while (line) {
+				sv once $dir
+			} &
 		bg_jobs=($bg_jobs $apid)
-		done
-		outs1="$outs2"
-	fi
-done
-
-exit 0
+		}
+		outs1=$outs2
+	}
+}
