@@ -3,6 +3,10 @@ require('strict')
 local Px = require('posix')
 local Cs = require('curses')
 
+local function isempty(var)
+	return (not var) or (var == '')
+end
+
 local SJ_DIR = os.getenv('SJ_DIR')
 local SJ_SERVER = os.getenv('SJ_SERVER')
 local SJ_USER = os.getenv('SJ_USER')
@@ -30,10 +34,10 @@ local chatdir = nil
 if current_dir then
 	chatdir = './'
 else
-	if (not SJ_DIR) or (SJ_DIR == '') then
+	if isempty(SJ_DIR) then
 		print('Directory is needed via -d or SJ_DIR')
 		os.exit(false)
-	elseif (not buddy) or (buddy == '') then
+	elseif isempty(buddy) then
 		print('Buddy is needed via -b')
 		os.exit(false)
  	else
@@ -43,15 +47,6 @@ end
 
 local outfilename = chatdir .. 'out'
 local infilename = chatdir .. 'in'
-if not os.execute('test -e ' .. outfilename) then
-	print('out file required')
-	print('attempted to open ' .. outfilename)
-	os.exit(false)
-elseif not os.execute('test -p ' .. infilename) then
-	print('in file required and must be a named pipe')
-	print('attempted to open ' .. infilename)
-	os.exit(false)
-end
 
 local tail_out = assert(io.popen('tail -f -n0 ' .. outfilename, 'r'))
 assert(tail_out:setvbuf('no'))
@@ -64,11 +59,11 @@ local fds = {
 	[stdin_fd] = { events = {IN=true} }
 }
 
-local in_fifo = io.open(chatdir .. 'in', 'a')
+local in_fifo = assert(io.open(infilename, 'a'))
 assert(in_fifo:setvbuf('no'))
 
 Cs.initscr()
---Cs.cbreak(false)
+Cs.cbreak(true)
 Cs.echo(false)
 local stdscr = Cs.stdscr()
 stdscr:clear()
@@ -111,7 +106,6 @@ while true do
 				s = string.char(c)
 				typing_win:addstr(s)
 				typing_win:refresh()
-				display_win:addstr('i')
 				display_win:refresh()
 			else
 				s = ''
