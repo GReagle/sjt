@@ -61,5 +61,5 @@ fn sigterm { kill -TERM -$bg_job }
 fn sigexit { kill -TERM -$bg_job }
 
 # Ctrl-D to end
-cat > in
+while (line | tr -d '\n' >> in) ;
 kill -TERM -$bg_job # kill the background job
