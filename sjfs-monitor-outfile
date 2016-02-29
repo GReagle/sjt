@@ -4,15 +4,15 @@ flag e +
 
 ifs=''
 tail -f -n0 $1 | while (ll=`{line}) {
-	~ $color no || tput setaf $color
-	~ $style no || tput $style
+	~ $color ?* && tput setaf $color
+	~ $style ?* && tput $style
 	printf %s $ll
 	if (~ `{printf %s $ll | wc -l} 0*)
 		printf '\n'
 	tput sgr0  # Turn off all attributes: back to normal
 	if (printf %s $ll | egrep -vq '^[[:digit:]]{4}-[[:digit:]]{2}-[[:digit:]]{2} [[:digit:]]{2}:[[:digit:]]{2} <' ^ $SJ_USER ^ '@' ^ $SJ_SERVER) {
 		printf '\a'
-		if (! ~ $note_time no)
+		if (~ $note_time ?*)
 			notify-send -t $note_time 'sjfs-chat: ' ^ `{basename `{pwd}} `{printf %s $ll | cut -d'>' -f2- }
 	}
 }

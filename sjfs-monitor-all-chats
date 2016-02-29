@@ -3,12 +3,7 @@ flag e +
 ~ $DEBUG ?* && flag x +
 
 usage='usage: ' ^ `{basename $0} ^ ' [-d <directory>]
-Environment variables:  SJ_DIR, SJ_SERVER, SJ_USER'
-
-# Set configuration variable to "no" to disable feature
-#
-# number of milliseconds for the notify-send timeout
-~ $note_time ?* || note_time=no
+Environment variables:  SJ_DIR, SJ_SERVER, SJ_USER, note_time'
 
 state=''
 for (arg) {
@@ -37,7 +32,7 @@ bg_jobs=()
 outs1=`{find . -name out | sort}
 if (~ $outs1 ?*) {
 	for (o in $outs1) {
-		style=no color=no sjfs-monitor-outfile $o &
+		sjfs-monitor-outfile $o &
 		bg_jobs=($bg_jobs $apid)
 	}
 }
@@ -59,9 +54,9 @@ while (true) {
 		for (o in $new_outs) {
 			notice='new chat from ' ^ `{basename `{dirname $o}}
 			printf $notice ^ '\a\n'
-			~ $note_time no || notify-send -t $note_time sjfs-monitor $notice
+			~ $note_time ?* && notify-send -t $note_time sjfs-monitor $notice
 			cat $o
-			style=no color=no sjfs-monitor-outfile $o &
+			sjfs-monitor-outfile $o &
 			bg_jobs=($bg_jobs $apid)
 		}
 		outs1=$outs2

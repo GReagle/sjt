@@ -9,13 +9,14 @@ usage='usage: ' ^ `{basename $0} ^ ' [-dsu] [-c | -b buddy]
 See sj(1) for explanation of options d, s, and u.
 Environment variables:  all from sj(1) and style, color, note_time'
 
-# Set configuration variable to "no" to disable feature
-#
-# style of incming message:  a style for tput e.g. bold, dim, blink, smul
-# (underlined), rev (reverse), smso (standout)
-~ $style ?* || style=no
-# color of incoming message:  a color for tput setaf, e.g. 1-7
+# Unset configuration variable to disable feature
+
+# style: for tput, e.g. bold, dim, blink, smul (underlined), rev (reverse),
+# smso (standout)
+
+# color: for tput setaf, e.g. 1-7
 ~ $color ?* || color=1
+
 # number of milliseconds for the notify-send timeout
 ~ $note_time ?* || note_time=500
 
