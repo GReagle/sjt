@@ -1,5 +1,4 @@
 #!/usr/bin/env rc
-# Ctrl-D to end
 flag e +
 ~ $DEBUG ?* && flag x +
 
@@ -43,8 +42,9 @@ if(! ~ $current_dir ?*) {
 
 tmpfile=`{mktemp} || exit 1
 cat out >> $tmpfile
-echo $tmpfile | entr -p rc -c 'tail -n1 '$tmpfile' | tr -d ''\n'' >> in' &
+printf '- - -\n\n' >> $tmpfile
+printf '%s\n' $tmpfile | entr -p rc -c 'tail -n1 '$tmpfile' | tr -d ''\n'' >> in' &
 bg_job=$apid
 $EDITOR $tmpfile
-kill -$bg_job
 rm $tmpfile
+kill -$apid
