@@ -43,7 +43,7 @@ if(! ~ $current_dir ?*) {
 tmpfile=`{mktemp} || exit 1
 cat out >> $tmpfile
 printf '- - -\n\n' >> $tmpfile
-printf '%s\n' $tmpfile | entr -p rc -c 'tail -n1 '$tmpfile' | tr -d ''\n'' >> in' &
+printf '%s\n' $tmpfile | entr -p rc -c 'awk ''NF{p=$0}END{print p}'' '$tmpfile' | tr -d ''\n''>> in' &
 bg_job=$apid
 $EDITOR $tmpfile
 rm $tmpfile
